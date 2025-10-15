@@ -12,7 +12,7 @@
 # get_ipython().run_line_magic('run', './GEN01_GEE_Authenticate.ipynb')
 import GEN01_GEE_Authenticate
 
-import ee
+import ee, os
 
 SERVICE_ACCOUNT = os.environ.get("GEE_SERVICE_ACCOUNT")
 KEY_FILE = "key.json"   # GitHub Actions writes the secret here
