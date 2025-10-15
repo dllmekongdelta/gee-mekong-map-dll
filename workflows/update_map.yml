@@ -1,0 +1,61 @@
+name: Update Map
+
+on:
+  schedule:
+    - cron: "0 0 * * *"   # run every day at midnight UTC
+  workflow_dispatch:       # allow manual run from GitHub
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      # - name: Install dependencies
+      #   run: |
+      #     pip install earthengine-api geemap folium branca jinja2 jupyter
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgeos-dev proj-bin proj-data libproj-dev gdal-bin libgdal-dev
+          pip install \
+            earthengine-api \
+            geemap \
+            folium \
+            branca \
+            jinja2 \
+            jupyter \
+            geopandas \
+            cartopy
+
+
+      - name: Save Service Account Key
+        run: |
+            echo '${{ secrets.GEE_KEY }}' > key.json
+
+      - name: Convert notebook to Python
+        run: jupyter nbconvert --to script tryout_goal_LOSS_add_breakwater2.ipynb
+
+      - name: Run update script
+        run: python tryout_goal_LOSS_add_breakwater2.py
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: key.json
+          GEE_SERVICE_ACCOUNT: ${{ secrets.GEE_SERVICE_ACCOUNT }}
+
+      - name: Commit and push results
+        run: |
+          git config user.name "Map Bot"
+          git config user.email "bot@example.com"
+          git add tryout_goal_LOSS4.html tile_urls.json
+          git commit -m "Automated map update" || echo "No changes to commit"
+          git push
