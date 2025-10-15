@@ -9,8 +9,11 @@
 
 # --- Run underlying python scripts
 # %run ./GEN04_HTML_layout.ipynb
+import GEN01_GEE_Authenticate
+import GEN02_AOI
+import GEN03_helper_functions
 import GEN04_HTML_layout
-
+import GEN05_mangrove_layers
 
 # In[10]:
 
