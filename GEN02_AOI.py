@@ -14,9 +14,11 @@ import GEN01_GEE_Authenticate
 
 import ee
 
-ee.Authenticate()
-ee.Initialize()
+SERVICE_ACCOUNT = os.environ.get("GEE_SERVICE_ACCOUNT")
+KEY_FILE = "key.json"   # GitHub Actions writes the secret here
 
+credentials = ee.ServiceAccountCredentials(SERVICE_ACCOUNT, KEY_FILE)
+ee.Initialize(credentials, project="gee-mekong-map")
 
 # In[2]:
 
