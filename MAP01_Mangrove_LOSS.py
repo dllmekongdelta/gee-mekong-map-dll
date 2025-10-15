@@ -18,20 +18,20 @@ import GEN04_HTML_layout
 import ee, os
 
 
-SERVICE_ACCOUNT = "gee-map-bot@gee-mekong-map.iam.gserviceaccount.com"
-KEY_FILE = "gee-mekong-map-2c919dd0361c.json"
+# SERVICE_ACCOUNT = "gee-map-bot@gee-mekong-map.iam.gserviceaccount.com"
+# KEY_FILE = "gee-mekong-map-2c919dd0361c.json"
 
-credentials = ee.ServiceAccountCredentials(SERVICE_ACCOUNT, KEY_FILE)
-ee.Initialize(credentials, project='gee-mekong-map')
+# credentials = ee.ServiceAccountCredentials(SERVICE_ACCOUNT, KEY_FILE)
+# ee.Initialize(credentials, project='gee-mekong-map')
 
 # gee-map-bot@gee-mekong-map.iam.gserviceaccount.com
 # gee-mekong-map-2c919dd0361c
 
-# SERVICE_ACCOUNT = os.environ.get("GEE_SERVICE_ACCOUNT")
-# KEY_FILE = "key.json"   # GitHub Actions writes the secret here
+SERVICE_ACCOUNT = os.environ.get("GEE_SERVICE_ACCOUNT")
+KEY_FILE = "key.json"   # GitHub Actions writes the secret here
 
-# credentials = ee.ServiceAccountCredentials(SERVICE_ACCOUNT, KEY_FILE)
-# ee.Initialize(credentials)
+credentials = ee.ServiceAccountCredentials(SERVICE_ACCOUNT, KEY_FILE)
+ee.Initialize(credentials, project="gee-mekong-map")
 
 # print("✅ Earth Engine initialized with Service Account")
 
