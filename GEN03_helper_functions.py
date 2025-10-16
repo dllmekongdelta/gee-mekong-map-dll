@@ -8,7 +8,7 @@
 # These functions retrieve cloud-filtered Landsat or Sentinel satellite images for a specific year and AOI from Google Earth Engine, then create a composite image that is clipped to the AOI
 
 # In[5]:
-
+import ee
 
 # ------------ Retrieve Landsat satellite images from GEE ----------------
 def get_landsat_composite(collection_id, year, aoi):
