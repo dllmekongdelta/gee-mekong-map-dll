@@ -43,11 +43,21 @@ jobs:
         run: |
             echo '${{ secrets.GEE_KEY }}' > key.json
 
-      - name: Run update script
-        run: python MAP01_Mangrove_LOSS.py
+      # - name: Run update script
+      #   run: python MAP01_Mangrove_LOSS.py
+      #   env:
+      #     GOOGLE_APPLICATION_CREDENTIALS: key.json
+      #     GEE_SERVICE_ACCOUNT: ${{ secrets.GEE_SERVICE_ACCOUNT }}
+
+      - name: Run update notebook
+        run: |
+          # Convert notebook to Python script (optional) and run it
+          jupyter nbconvert --to python MAP01_Mangrove_LOSS.ipynb
+          python MAP01_Mangrove_LOSS.py
         env:
           GOOGLE_APPLICATION_CREDENTIALS: key.json
           GEE_SERVICE_ACCOUNT: ${{ secrets.GEE_SERVICE_ACCOUNT }}
+
 
       - name: Commit and push results
         run: |
