@@ -20,7 +20,7 @@ KEY_FILE = "key.json"   # GitHub Actions writes the secret here
 credentials = ee.ServiceAccountCredentials(SERVICE_ACCOUNT, KEY_FILE)
 ee.Initialize(credentials)
 
-print("✅ Earth Engine initialized with Service Account")
+# print("✅ Earth Engine initialized with Service Account")
 
 # import ee
 # ee.Authenticate()
