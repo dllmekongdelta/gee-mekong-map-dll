@@ -174,7 +174,7 @@ logo_html = """
      justify-content: center;                     /* center horizontally again for safety */
      height: 90px;                                /* smaller white box height */
 ">
-     <img src="images/Living_lab_logo_optie_1.png" height="80px" style="width:auto;">
+     <img src="images/logo/Living_lab_logo_optie_1.png" height="80px" style="width:auto;">
 </div>
 """
 
