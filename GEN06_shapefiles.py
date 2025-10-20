@@ -146,7 +146,7 @@ popup_texts_BW = [
     '<a href="https://publish.obsidian.md/livinglab/Mangrove+Living+Lab/1.+Introduction/1.1+Why+Mekong+Delta" target="_blank">For more information about breakwaters, click here.</a>', 
 
     '<b>Revetment</b><br><br>'
-    '<img src="images/breakwaters/revetment.JPG" width="200px"><br>'
+    '<img src="images/breakwaters/revetment.jpg" width="200px"><br>'
     '<br>Construction year: 2020.<br><br>'
     '<a href="https://publish.obsidian.md/livinglab/Mangrove+Living+Lab/1.+Introduction/1.1+Why+Mekong+Delta" target="_blank">For more information about breakwaters, click here.</a>', 
 
