@@ -233,7 +233,3 @@ for shp, popup_html, (icon_name, icon_color) in zip(shapefiles_extra, popup_text
 
 
 # In[ ]:
-
-
-get_ipython().system('jupyter nbconvert --to script GEN06_shapefiles.ipynb')
-
