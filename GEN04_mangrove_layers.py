@@ -99,6 +99,11 @@ color_2020_2024_gain = "#00441b"  # very dark green (most recent)
 # --------------- Set Color for COVERAGE layers and legend -----------------
 color_mangrove_coverage = "#1a9850"
 
+# -------------- Set color for shapefile layers --------------------
+color_commune = "#008B8B"
+color_sea_dike = "#F18D09"
+color_breakwater = "#E6EE0F" 
+
 
 # ### Background satellite image
 

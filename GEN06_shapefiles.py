@@ -1,6 +1,17 @@
-import geopandas as gpd
-import glob
+#!/usr/bin/env python
+# coding: utf-8
 
+# # Shapefiles
+# This file contains the link to all shapefiles, and their layout, that are added to the maps. This consists of seadikes, commune boundaries, breakwaters, wind turbines and other human activities
+
+# ### Commune boundaries
+
+# In[10]:
+
+
+import geopandas as gpd
+import GEN04_mangrove_layers as ML
+import glob
 # ---- Add commune boundaries shapefile ----
 commune_path = "shapefile_commune/VungNghiencuu.shp"  # path to your shapefile
 gdf_commune = gpd.read_file(commune_path)
@@ -11,7 +22,7 @@ geojson_commune = gdf_commune.__geo_interface__
 # Optional: customize style
 commune_style = lambda feature: {
     # "color": "#E74176",       # Red outline
-    "color": "#008B8B",       # Almost black, administrative look
+    "color": ML.color_commune,       # Almost black, administrative look
     "weight": 3,              # Line thickness
     # "fillColor": "#E74176",   # Fill color (optional)
     "fillOpacity": 0,        # Transparency
@@ -27,6 +38,12 @@ commune_style = lambda feature: {
 #     "dashArray": "6, 8"       # Longer dashes = calmer, less busy
 # }
 
+
+# ### Seadikes
+
+# In[11]:
+
+
 import folium
 import pandas as pd
     # ---------------- Add Sea Dikes shapefile ------------------
@@ -37,11 +54,9 @@ gdf_sea_dikes = gpd.read_file(sea_dikes_path)
 gdf_sea_dikes["Segment"] = gdf_sea_dikes["Segment"].str.replace("dyke", "dike", case=False)
 gdf_sea_dikes["Type"] = gdf_sea_dikes["Type"].str.replace("dyke", "dike", case=False)
 
-# Style for the lines
-color_sea_dike = "#F18D09"
 
 sea_dikes_style = lambda feature: {
-    "color": color_sea_dike,   # orange
+    "color": ML.color_sea_dike,   # orange
     "weight": 5,
     "fillOpacity": 0
 }
@@ -54,7 +69,7 @@ for _, row in gdf_sea_dikes.iterrows():
     # Skip rows where SPWs_type is None, or NaN
     if pd.isna(row["SPWs_type"]) or str(row["SPWs_type"]).strip().lower() == "none":
         continue  # <-- skip adding this segment  
-     
+
     # Build a custom HTML string for the popup
     popup_html = f"""
     <b>Sea dike</b><br><br>
@@ -77,9 +92,14 @@ for _, row in gdf_sea_dikes.iterrows():
     # Attach the popup
     popup = folium.Popup(popup_html, max_width=350)
     popup.add_to(geo_j)
-    
+
     # Add feature to the group (not directly to the map)
     geo_j.add_to(sea_dikes_group)
+
+
+# ### Breakwaters
+
+# In[12]:
 
 
 # -------------- Add breakwaters ----------------
@@ -90,70 +110,75 @@ breakwaters_group = folium.FeatureGroup(name="Breakwaters", show=True)
 # Define popup text for each shapefile (order matches file order)
 popup_texts_BW = [
     '<b>Detached riprap pillar breakwater</b><br><br>'
-    '<img src="images/breakwaters/detached_riprap_pillar.jpg" width="200px"><br>'
+    '<img src="images/breakwaters/detached_riprap_pillar.JPG" width="200px"><br>'
     '<br>Construction year: 2019.<br>'
     'From 2016-2019, the site was protected by a bamboo fence instead of the breakwater.<br><br>'
     '<a href="https://publish.obsidian.md/livinglab/Mangrove+Living+Lab/1.+Introduction/1.1+Why+Mekong+Delta" target="_blank">For more information about breakwaters, click here.</a>', 
-    
+
     '<b>Perforated dome breakwater</b><br><br>'
-    '<img src="images/breakwaters/perforated_dome.jpg" width="200px"><br>'
+    '<img src="images/breakwaters/perforated_dome.JPG" width="200px"><br>'
     '<br>Construction year: 2019.<br>'
     'From 2016-2019, the site was protected by a bamboo fence instead of the breakwater.<br><br>'
     '<a href="https://publish.obsidian.md/livinglab/Mangrove+Living+Lab/1.+Introduction/1.1+Why+Mekong+Delta" target="_blank">For more information about breakwaters, click here.</a>', 
-    
+
     '<b>Detached riprap pillar breakwater</b><br><br>'
-    '<img src="images/breakwaters/detached_riprap_pillar.jpg" width="200px"><br>'
+    '<img src="images/breakwaters/detached_riprap_pillar.JPG" width="200px"><br>'
     '<br>Construction year: 2019.<br>'
     'From 2016-2019, the site was protected by a bamboo fence instead of the breakwater.<br><br>'
     '<a href="https://publish.obsidian.md/livinglab/Mangrove+Living+Lab/1.+Introduction/1.1+Why+Mekong+Delta" target="_blank">For more information about breakwaters, click here.</a>',
-    
+
     '<b>Detached riprap pillar breakwater</b><br><br>'
-    '<img src="images/breakwaters/detached_riprap_pillar.jpg" width="200px"><br>'
+    '<img src="images/breakwaters/detached_riprap_pillar.JPG" width="200px"><br>'
     '<br>Construction year: 2019.<br>'
     'From 2016-2019, the site was protected by a bamboo fence instead of the breakwater.<br><br>'
     '<a href="https://publish.obsidian.md/livinglab/Mangrove+Living+Lab/1.+Introduction/1.1+Why+Mekong+Delta" target="_blank">For more information about breakwaters, click here.</a>', 
-    
+
     '<b>Detached riprap pillar breakwater</b><br><br>'
-    '<img src="images/breakwaters/detached_riprap_pillar.jpg" width="200px"><br>'
+    '<img src="images/breakwaters/detached_riprap_pillar.JPG" width="200px"><br>'
     '<br>Construction year: 2019.<br>'
     'From 2016-2019, the site was protected by a bamboo fence instead of the breakwater.<br><br>'
     '<a href="https://publish.obsidian.md/livinglab/Mangrove+Living+Lab/1.+Introduction/1.1+Why+Mekong+Delta" target="_blank">For more information about breakwaters, click here.</a>', 
-    
+
     '<b>Detached riprap pillar breakwater</b><br><br>'
-    '<img src="images/breakwaters/detached_riprap_pillar.jpg" width="200px"><br>'
+    '<img src="images/breakwaters/detached_riprap_pillar.JPG" width="200px"><br>'
     '<br>Construction year: 2019.<br>'
     'From 2016-2019, the site was protected by a bamboo fence instead of the breakwater.<br><br>'
     '<a href="https://publish.obsidian.md/livinglab/Mangrove+Living+Lab/1.+Introduction/1.1+Why+Mekong+Delta" target="_blank">For more information about breakwaters, click here.</a>', 
-     
+
     '<b>Revetment</b><br><br>'
     '<img src="Pictures/revetment.jpg" width="200px"><br>'
     '<br>Construction year: 2020.<br><br>'
     '<a href="https://publish.obsidian.md/livinglab/Mangrove+Living+Lab/1.+Introduction/1.1+Why+Mekong+Delta" target="_blank">For more information about breakwaters, click here.</a>', 
-    
+
     '<b>Detached riprap pillar breakwater</b><br><br>'
-    '<img src="images/breakwaters/detached_riprap_pillar.jpg" width="200px"><br>'
+    '<img src="images/breakwaters/detached_riprap_pillar.JPG" width="200px"><br>'
     '<br>Construction year: 2025.<br><br>'
     '<a href="https://publish.obsidian.md/livinglab/Mangrove+Living+Lab/1.+Introduction/1.1+Why+Mekong+Delta" target="_blank">For more information about breakwaters, click here.</a>', 
-    
+
 ]
 
 # Loop through shapefiles in the folder
 shapefiles_BW = sorted(glob.glob("shapefile_breakwaters/*.shp"))
 
 breakwater_style = lambda feature: {
-    "color": "#E6EE0F",       # Yellow outline
+    "color": ML.color_breakwater,       # Yellow outline
     "weight": 5,              # Line thickness
 }
 
 for shp, popup_html in zip(shapefiles_BW, popup_texts_BW):
     gdf = gpd.read_file(shp)
     geojson_data = gdf.__geo_interface__
-    
+
     folium.GeoJson(
         geojson_data,
         style_function=breakwater_style,
         popup=folium.Popup(popup_html, max_width=300)
     ).add_to(breakwaters_group)    
+
+
+# 
+
+# In[13]:
 
 
 # -------------- Add more human activities ----------------------------
@@ -166,17 +191,17 @@ shapefiles_extra = sorted(glob.glob("shapefile_other/*.shp"))
 popup_texts_extra = [
     '<b>Nhà Mát resort</b>'
     '<br>Construction year: 2015<br>', 
-    
+
     '<b>Mangrove reforestation projects</b>'
     '<br>2000-2010: 150-200 hectares'
     '<br>2015-2020: 201 hectares'
     '<br>2019: more than 2000 mangrove trees<br><br>'
     '<a href="https://publish.obsidian.md/livinglab/Mangrove+Living+Lab/1.+Introduction/1.1+Why+Mekong+Delta" target="_blank">For more information about mangrove restoration, click here</a>', 
-    
+
     '<b>Aquaculture</b>', 
-    
+
     '<b>Wind park</b>', 
-    
+
     '<b>Urban area</b>'   
 ]
 
@@ -191,10 +216,10 @@ icons_extra = [
 
 for shp, popup_html, (icon_name, icon_color) in zip(shapefiles_extra, popup_texts_extra, icons_extra):
     gdf = gpd.read_file(shp)
-    
+
     # Extract the single point geometry
     point = gdf.geometry.iloc[0]
-    
+
     if point.geom_type == "Point":
         lon, lat = point.x, point.y
 
@@ -205,5 +230,10 @@ for shp, popup_html, (icon_name, icon_color) in zip(shapefiles_extra, popup_text
             icon=folium.Icon(icon=icon_name, prefix="fa", color=icon_color)
         ).add_to(Extra_group)
 
-# Add the group to the map and layer control
+
+
+# In[ ]:
+
+
+get_ipython().system('jupyter nbconvert --to script GEN06_shapefiles.ipynb')
 

@@ -21,9 +21,10 @@ legend_dict_mangrove_LOSS = {
     "Mangrove loss (2005-2010)": ML.color_2005_2010_loss,
     "Mangrove loss (2010-2015)": ML.color_2010_2015_loss,
     "Mangrove loss (2015-2020)": ML.color_2015_2020_loss,
-    "Mangrove loss (2020-2025)": ML.color_2020_2024_loss 
-    # "Breakwaters": color_breakwater,
-    # "Seadikes": color_seadike
+    "Mangrove loss (2020-2025)": ML.color_2020_2024_loss,
+    "Commune boundaries": ML.color_commune, 
+    "Sea dikes": ML.color_sea_dike,
+    "Breakwaters": ML.color_breakwater    
     }
 legend_dict_mangrove_GAIN = {
     "Mangrove gain (1984-1990)": ML.color_1988_1992_gain,
