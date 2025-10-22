@@ -3,6 +3,9 @@ name: Run All Notebooks
 
 on:
   workflow_dispatch:
+  
+permissions:
+  contents: write
 
 jobs:
   run_all:
