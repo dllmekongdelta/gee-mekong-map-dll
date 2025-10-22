@@ -1,4 +1,4 @@
-name: Update Map
+name: Update LOSS map
 
 on:
   schedule:
@@ -63,7 +63,7 @@ jobs:
         run: |
           git config user.name "Map Bot"
           git config user.email "bot@example.com"
-          git add tryout_goal_LOSS.html  
+          git add Mangrove_LOSS_map.html  
           git commit -m "Automated map update" || echo "No changes to commit"
           git push
         # tile_urls.json
