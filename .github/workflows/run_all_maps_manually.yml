@@ -1,0 +1,15 @@
+# .github/workflows/master.yml
+name: Run All Notebooks
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run_all:
+    uses: ./.github/workflows/update_LOSS_map.yml
+  run_b:
+    uses: ./.github/workflows/update_GAIN_map.yml
+    needs: run_all
+  run_c:
+    uses: ./.github/workflows/update_COVERAGE_map.yml
+    needs: run_b
