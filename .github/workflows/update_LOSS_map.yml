@@ -52,8 +52,8 @@ jobs:
       - name: Run update notebook
         run: |
           # Convert notebook to Python script (optional) and run it
-          jupyter nbconvert --to python MAP01_Mangrove_LOSS.ipynb
-          python MAP01_Mangrove_LOSS.py
+          jupyter nbconvert --to python MAP02_Mangrove_LOSS.ipynb
+          python MAP02_Mangrove_LOSS.py
         env:
           GOOGLE_APPLICATION_CREDENTIALS: key.json
           GEE_SERVICE_ACCOUNT: ${{ secrets.GEE_SERVICE_ACCOUNT }}
