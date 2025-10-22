@@ -2,7 +2,7 @@ name: Update COVERAGE map
 
 on:
   schedule:
-    - cron: "0 0 * * *"   # run every day at midnight UTC
+    - cron: "0 17 * * *"   # runs every day at midnight Vietnam time (GMT+7)
   workflow_dispatch:       # allow manual run from GitHub
   workflow_call:           # so it can be used in other workflows
 
