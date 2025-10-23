@@ -49,11 +49,17 @@ jobs:
           GOOGLE_APPLICATION_CREDENTIALS: key.json
           GEE_SERVICE_ACCOUNT: ${{ secrets.GEE_SERVICE_ACCOUNT }}
 
-
       - name: Commit and push results
         run: |
           git config user.name "Map Bot"
           git config user.email "bot@example.com"
-          git add Mangrove_GAIN_map.html  
+
+          # Make sure we’re up to date before pushing
+          git fetch origin main
+          git rebase origin/main || echo "No rebase needed"
+
+          git add Mangrove_GAIN_map.html
           git commit -m "Automated map update" || echo "No changes to commit"
-          git push
+
+          # Push updated map
+          git push origin main
