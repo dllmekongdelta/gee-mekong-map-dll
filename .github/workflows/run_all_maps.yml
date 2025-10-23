@@ -5,7 +5,8 @@ on:
     - cron: "0 17 * * *"   # Midnight Vietnam time
   workflow_dispatch:
 
-
+permissions:
+  contents: write
 
 jobs:
   run_loss:
