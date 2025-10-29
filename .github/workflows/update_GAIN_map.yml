@@ -2,7 +2,7 @@ name: Update GAIN map
 
 on:
   schedule:
-    - cron: "0 17 * * *"   # runs every day at midnight Vietnam time (GMT+7)
+    - cron: "30 17 1,5,9,13,17,21,25,29 * *"    # 00:00 VN, every 4 days
   workflow_dispatch:       # allow manual run from GitHub
   workflow_call:           # so it can be used in other workflows
 
