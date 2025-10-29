@@ -79,4 +79,4 @@ jobs:
       - name: Warm up GitHub Pages cache
         run: |
           sleep 10  # give GitHub Pages a few seconds to update
-          curl -s https://dllmekongdelta.github.io/gee-mekong-map-dll/Mangrove_GAIN_map.html > /dev/null && echo "Cache warmed ✅"
+          curl -s https://dllmekongdelta.github.io/gee-mekong-map-dll/Mangrove_GAIN_map.html > /dev/null && echo "Cache warmed"
