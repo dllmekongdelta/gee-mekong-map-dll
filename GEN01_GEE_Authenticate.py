@@ -6,22 +6,13 @@
 
 import ee, os
 
-# # ------- To run in Visual Studio Code (REMOVE WHEN FINAL PUSH TO GITHUB!)
-# SERVICE_ACCOUNT = os.environ.get("gee-map-bot@gee-mekong-map.iam.gserviceaccount.com")
-# KEY_FILE = "gee-mekong-map-2c919dd0361c.json"
-
-# credentials = ee.ServiceAccountCredentials(SERVICE_ACCOUNT, KEY_FILE)
-# ee.Initialize(credentials)
-
-# ------- To run on GitHub ------------------
+# --------- Activate this before pushing to GitHub --------------------
 SERVICE_ACCOUNT = os.environ.get("GEE_SERVICE_ACCOUNT")
 KEY_FILE = "key.json"   # GitHub Actions writes the secret here
 
 credentials = ee.ServiceAccountCredentials(SERVICE_ACCOUNT, KEY_FILE)
 ee.Initialize(credentials)
 
-# print("✅ Earth Engine initialized with Service Account")
-
-# import ee
+# --------- Activate when using in VS Code --------------------
 # ee.Authenticate()
-# ee.Initialize(project='gee-mekong-map')
+# ee.Initialize(project="gee-mekong-map")

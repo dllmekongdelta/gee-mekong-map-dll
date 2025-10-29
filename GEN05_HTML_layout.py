@@ -12,35 +12,41 @@ import GEN04_mangrove_layers as ML
 # In[2]:
 
 
-# --------------Add Legend --------------------
+# -------------- Create legend for different maps --------------------
 legend_dict_mangrove_LOSS = {
-    "Mangrove loss (1984-1992)": ML.color_1988_1992_loss,
+    "Mangrove loss (1988-1992)": ML.color_1988_1992_loss,
     "Mangrove loss (1992-1997)": ML.color_1992_1997_loss,
     "Mangrove loss (1997-2001)": ML.color_1997_2001_loss,
     "Mangrove loss (2001-2005)": ML.color_2001_2005_loss,
     "Mangrove loss (2005-2010)": ML.color_2005_2010_loss,
     "Mangrove loss (2010-2015)": ML.color_2010_2015_loss,
     "Mangrove loss (2015-2020)": ML.color_2015_2020_loss,
-    "Mangrove loss (2020-2025)": ML.color_2020_2024_loss,
+    "Mangrove loss (2020-2025)": ML.color_2020_2025_loss,
     "Commune boundaries": ML.color_commune, 
     "Sea dikes": ML.color_sea_dike,
     "Breakwaters": ML.color_breakwater    
     }
 legend_dict_mangrove_GAIN = {
-    "Mangrove gain (1984-1990)": ML.color_1988_1992_gain,
+    "Mangrove gain (1988-1990)": ML.color_1988_1992_gain,
     "Mangrove gain (1990-1995)": ML.color_1992_1997_gain,
     "Mangrove gain (1995-2000)": ML.color_1997_2001_gain,
     "Mangrove gain (2000-2005)": ML.color_2001_2005_gain,
     "Mangrove gain (2005-2010)": ML.color_2005_2010_gain,
     "Mangrove gain (2010-2015)": ML.color_2010_2015_gain,
     "Mangrove gain (2015-2020)": ML.color_2015_2020_gain,
-    "Mangrove gain (2020-2025)": ML.color_2020_2024_gain,
+    "Mangrove gain (2020-2025)": ML.color_2020_2025_gain,
+    "Commune boundaries": ML.color_commune, 
+    "Sea dikes": ML.color_sea_dike,
+    "Breakwaters": ML.color_breakwater   
 }
 
 legend_dict_mangrove_COVERAGE = {
-    "Mangrove coverage": ML.color_mangrove_coverage
+    "Mangrove coverage": ML.color_mangrove_coverage,
+    "Commune boundaries": ML.color_commune, 
+    "Sea dikes": ML.color_sea_dike,
+    "Breakwaters": ML.color_breakwater   
 }
-
+# -------- Legend style ----------
 style = {
     "position": "fixed",
     "z-index": "9999",
@@ -52,8 +58,10 @@ style = {
     "bottom": "20px",
     "right": "5px",
 }
+
+# -----------Add a custom legend to a folium map --------
+
 def add_folium_legend(m, title, legend_dict, style=None):
-    """Add a custom legend to a folium map."""
     if style is None:
         style = {
             "position": "fixed",
@@ -86,8 +94,8 @@ def add_folium_legend(m, title, legend_dict, style=None):
 # In[3]:
 
 
-from branca.element import MacroElement, Element
-from jinja2 import Template
+from branca.element import MacroElement, Element   # Low-level HTML/JS elements for Folium/Branca maps
+from jinja2 import Template                        #jinja2 generates the HTML/JS template for adding the scale bar to the map.
 
 class ScaleBar(MacroElement):
     _template = Template(u"""
@@ -129,7 +137,7 @@ class ScaleBar(MacroElement):
 # In[4]:
 
 
-# ----------- north arrow ----------------
+# ----------- Dunction to add North arrow ----------------
 def add_north_arrow(m, position="topright", arrow_size="35px", text_size="25px"):
     arrow_css = f"""
         <div style="
@@ -157,7 +165,7 @@ def add_north_arrow(m, position="topright", arrow_size="35px", text_size="25px")
 
 # In[5]:
 
-
+# --------- Sets logo 
 logo_html = """
 <div style="
      position: fixed;

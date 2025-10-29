@@ -44,7 +44,7 @@ def add_ndvi(image, sensor):
         ndvi = image.normalizedDifference(["SR_B5", "SR_B4"]).rename("NDVI")
     elif sensor == "S2":  # Sentinel-2
         ndvi = image.normalizedDifference(["B8", "B4"]).rename("NDVI")
-    else:               # error als niet bekend 
+    else:               # error if sensor type is unknown
         raise ValueError("Unknown sensor type")
     return image.addBands(ndvi)
 

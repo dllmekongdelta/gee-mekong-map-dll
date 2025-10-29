@@ -7,11 +7,12 @@
 # ### Commune boundaries
 
 # In[10]:
-
-
-import geopandas as gpd
 import GEN04_mangrove_layers as ML
-import glob
+
+
+import geopandas as gpd                # Spatial data handling (GeoDataFrames)
+import glob                            # File pattern matching (e.g., list all .tif files in a folder)
+
 # ---- Add commune boundaries shapefile ----
 commune_path = "shapefile_commune/VungNghiencuu.shp"  # path to your shapefile
 gdf_commune = gpd.read_file(commune_path)
@@ -79,7 +80,7 @@ for _, row in gdf_sea_dikes.iterrows():
     <br>Length (m): {row['Length_m']}
     <br>SPWs Type:</b> {row['SPWs_type']}
     <br>L_SPWs (m):</b> {row['L_SPWs_m']}<br><br>
-    <a href="https://publish.obsidian.md/livinglab/Mangrove+Living+Lab/1.+Introduction/1.1+Why+Mekong+Delta" target="_blank">
+    <a href="https://www.livinglabmekongdelta.com/seadike" target="_blank">
     For more information about sea dikes, click here</a>
     """
 
@@ -109,51 +110,59 @@ breakwaters_group = folium.FeatureGroup(name="Breakwaters", show=True)
 
 # Define popup text for each shapefile (order matches file order)
 popup_texts_BW = [
+    # Shapefile 1
     '<b>Detached riprap pillar breakwater</b><br><br>'
     '<img src="images/breakwaters/detached_riprap_pillar.JPG" width="200px"><br>'
     '<br>Construction year: 2019.<br>'
     'From 2016-2019, the site was protected by a bamboo fence instead of the breakwater.<br><br>'
-    '<a href="https://publish.obsidian.md/livinglab/Mangrove+Living+Lab/1.+Introduction/1.1+Why+Mekong+Delta" target="_blank">For more information about breakwaters, click here.</a>', 
+    '<a href="https://www.livinglabmekongdelta.com/breakwaters" target="_blank">For more information about breakwaters, click here.</a>', 
 
+    # Shapefile 2
     '<b>Perforated dome breakwater</b><br><br>'
     '<img src="images/breakwaters/perforated_dome.JPG" width="200px"><br>'
     '<br>Construction year: 2019.<br>'
-    'From 2016-2019, the site was protected by a bamboo fence instead of the breakwater.<br><br>'
-    '<a href="https://publish.obsidian.md/livinglab/Mangrove+Living+Lab/1.+Introduction/1.1+Why+Mekong+Delta" target="_blank">For more information about breakwaters, click here.</a>', 
+    'From 2012-2019, the site was protected by a bamboo fence instead of the breakwater.<br><br>'
+    '<a href="https://www.livinglabmekongdelta.com/breakwaters" target="_blank">For more information about breakwaters, click here.</a>', 
 
+    # Shapefile 3
     '<b>Detached riprap pillar breakwater</b><br><br>'
     '<img src="images/breakwaters/detached_riprap_pillar.JPG" width="200px"><br>'
     '<br>Construction year: 2019.<br>'
-    'From 2016-2019, the site was protected by a bamboo fence instead of the breakwater.<br><br>'
-    '<a href="https://publish.obsidian.md/livinglab/Mangrove+Living+Lab/1.+Introduction/1.1+Why+Mekong+Delta" target="_blank">For more information about breakwaters, click here.</a>',
-
+    'From 2012-2019, the site was protected by a bamboo fence instead of the breakwater.<br><br>'
+    '<a href="https://www.livinglabmekongdelta.com/breakwaters" target="_blank">For more information about breakwaters, click here.</a>',
+    
+    # Shapefile 4
     '<b>Detached riprap pillar breakwater</b><br><br>'
     '<img src="images/breakwaters/detached_riprap_pillar.JPG" width="200px"><br>'
     '<br>Construction year: 2019.<br>'
-    'From 2016-2019, the site was protected by a bamboo fence instead of the breakwater.<br><br>'
-    '<a href="https://publish.obsidian.md/livinglab/Mangrove+Living+Lab/1.+Introduction/1.1+Why+Mekong+Delta" target="_blank">For more information about breakwaters, click here.</a>', 
+    'From 2012-2019, the site was protected by a bamboo fence instead of the breakwater.<br><br>'
+    '<a href="https://www.livinglabmekongdelta.com/breakwaters" target="_blank">For more information about breakwaters, click here.</a>', 
 
+    # Shapefile 5
     '<b>Detached riprap pillar breakwater</b><br><br>'
     '<img src="images/breakwaters/detached_riprap_pillar.JPG" width="200px"><br>'
     '<br>Construction year: 2019.<br>'
-    'From 2016-2019, the site was protected by a bamboo fence instead of the breakwater.<br><br>'
-    '<a href="https://publish.obsidian.md/livinglab/Mangrove+Living+Lab/1.+Introduction/1.1+Why+Mekong+Delta" target="_blank">For more information about breakwaters, click here.</a>', 
-
+    'From 2012-2019, the site was protected by a bamboo fence instead of the breakwater.<br><br>'
+    '<a href="https://www.livinglabmekongdelta.com/breakwaters" target="_blank">For more information about breakwaters, click here.</a>', 
+ 
+    # Shapefile 6
     '<b>Detached riprap pillar breakwater</b><br><br>'
     '<img src="images/breakwaters/detached_riprap_pillar.JPG" width="200px"><br>'
     '<br>Construction year: 2019.<br>'
-    'From 2016-2019, the site was protected by a bamboo fence instead of the breakwater.<br><br>'
-    '<a href="https://publish.obsidian.md/livinglab/Mangrove+Living+Lab/1.+Introduction/1.1+Why+Mekong+Delta" target="_blank">For more information about breakwaters, click here.</a>', 
+    'From 2012-2019, the site was protected by a bamboo fence instead of the breakwater.<br><br>'
+    '<a href="https://www.livinglabmekongdelta.com/breakwaters" target="_blank">For more information about breakwaters, click here.</a>', 
 
+    # Shapefile 7
     '<b>Revetment</b><br><br>'
     '<img src="images/breakwaters/revetment.jpg" width="200px"><br>'
     '<br>Construction year: 2020.<br><br>'
-    '<a href="https://publish.obsidian.md/livinglab/Mangrove+Living+Lab/1.+Introduction/1.1+Why+Mekong+Delta" target="_blank">For more information about breakwaters, click here.</a>', 
+    '<a href="https://www.livinglabmekongdelta.com/breakwaters" target="_blank">For more information about breakwaters, click here.</a>', 
 
+    # Shapefile 8
     '<b>Detached riprap pillar breakwater</b><br><br>'
     '<img src="images/breakwaters/detached_riprap_pillar.JPG" width="200px"><br>'
     '<br>Construction year: 2025.<br><br>'
-    '<a href="https://publish.obsidian.md/livinglab/Mangrove+Living+Lab/1.+Introduction/1.1+Why+Mekong+Delta" target="_blank">For more information about breakwaters, click here.</a>', 
+    '<a href="https://www.livinglabmekongdelta.com/breakwaters" target="_blank">For more information about breakwaters, click here.</a>', 
 
 ]
 
@@ -188,7 +197,7 @@ Extra_group = folium.FeatureGroup(name="Other human activities", show=True)
 shapefiles_extra = sorted(glob.glob("shapefile_other/*.shp"))
 
 # Define popup text for each shapefile (order matches file order)
-popup_texts_extra = [
+popup_texts_extra = [   
     '<b>Nhà Mát resort</b>'
     '<br>Construction year: 2015<br>', 
 
@@ -196,7 +205,7 @@ popup_texts_extra = [
     '<br>2000-2010: 150-200 hectares'
     '<br>2015-2020: 201 hectares'
     '<br>2019: more than 2000 mangrove trees<br><br>'
-    '<a href="https://publish.obsidian.md/livinglab/Mangrove+Living+Lab/1.+Introduction/1.1+Why+Mekong+Delta" target="_blank">For more information about mangrove restoration, click here</a>', 
+    '<a href="https://www.livinglabmekongdelta.com/mangrovereforestation" target="_blank">For more information about mangrove restoration, click here</a>', 
 
     '<b>Aquaculture</b>', 
 
