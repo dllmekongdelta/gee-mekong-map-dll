@@ -59,9 +59,9 @@ jobs:
               html = open(filename).read()
               minified = htmlmin.minify(html, remove_empty_space=True)
               open(filename, "w").write(minified)
-              print(f"✅ Minified {filename}")
+              print(f" Minified {filename}")
           else:
-              print("⚠️ HTML file not found, skipping minification.")
+              print(" HTML file not found, skipping minification.")
           EOF
 
       - name: Commit and push results
