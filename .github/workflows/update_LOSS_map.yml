@@ -12,6 +12,7 @@ permissions:
 jobs:
   update:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -20,10 +21,6 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
-
-      # - name: Install dependencies
-      #   run: |
-      #     pip install earthengine-api geemap folium branca jinja2 jupyter
 
       - name: Install dependencies
         run: |
@@ -37,40 +34,49 @@ jobs:
             jinja2 \
             jupyter \
             geopandas \
-            cartopy
-
+            cartopy \
+            htmlmin   # for HTML minification
 
       - name: Save Service Account Key
         run: |
-            echo '${{ secrets.GEE_KEY }}' > key.json
-
-      # - name: Run update script
-      #   run: python MAP01_Mangrove_LOSS.py
-      #   env:
-      #     GOOGLE_APPLICATION_CREDENTIALS: key.json
-      #     GEE_SERVICE_ACCOUNT: ${{ secrets.GEE_SERVICE_ACCOUNT }}
+          echo '${{ secrets.GEE_KEY }}' > key.json
 
       - name: Run update notebook
         run: |
-          # Convert notebook to Python script (optional) and run it
           jupyter nbconvert --to python MAP01_Mangrove_LOSS.ipynb
           python MAP01_Mangrove_LOSS.py
         env:
           GOOGLE_APPLICATION_CREDENTIALS: key.json
           GEE_SERVICE_ACCOUNT: ${{ secrets.GEE_SERVICE_ACCOUNT }}
 
+      # Minify HTML map to reduce load size
+      - name: Minify HTML map
+        run: |
+          python - <<'EOF'
+          import htmlmin, os
+          filename = "Mangrove_LOSS_map.html"
+          if os.path.exists(filename):
+              html = open(filename).read()
+              minified = htmlmin.minify(html, remove_empty_space=True)
+              open(filename, "w").write(minified)
+              print(f" Minified {filename}")
+          else:
+              print(" HTML file not found, skipping minification.")
+          EOF
 
       - name: Commit and push results
         run: |
           git config user.name "Map Bot"
           git config user.email "bot@example.com"
-
-          # Make sure we’re up to date before pushing
           git fetch origin main
           git rebase origin/main || echo "No rebase needed"
 
           git add Mangrove_LOSS_map.html
           git commit -m "Automated map update" || echo "No changes to commit"
-
-          # Push updated map
           git push origin main
+
+      # Warm up GitHub Pages CDN so first load is instant
+      - name: Warm up GitHub Pages cache
+        run: |
+          sleep 10  # wait briefly for GitHub Pages to deploy
+          curl -s https://dllmekongdelta.github.io/gee-mekong-map-dll/Mangrove_LOSS_map.html > /dev/null && echo "Cache warmed ✅"
