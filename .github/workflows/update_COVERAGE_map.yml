@@ -63,4 +63,4 @@ jobs:
           git commit -m "Automated map update" || echo "No changes to commit"
 
           # Push updated map
-          git push origin mainh
+          git push origin main
