@@ -12,6 +12,7 @@ permissions:
 jobs:
   update:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -33,34 +34,49 @@ jobs:
             jinja2 \
             jupyter \
             geopandas \
-            cartopy
-
+            cartopy \
+            htmlmin   # add minifier
 
       - name: Save Service Account Key
         run: |
-            echo '${{ secrets.GEE_KEY }}' > key.json
+          echo '${{ secrets.GEE_KEY }}' > key.json
 
       - name: Run update notebook
         run: |
-          # Convert notebook to Python script (optional) and run it
           jupyter nbconvert --to python MAP03_Mangrove_COVERAGE.ipynb
           python MAP03_Mangrove_COVERAGE.py
         env:
           GOOGLE_APPLICATION_CREDENTIALS: key.json
           GEE_SERVICE_ACCOUNT: ${{ secrets.GEE_SERVICE_ACCOUNT }}
 
+      # Minify HTML for faster loading
+      - name: Minify HTML map
+        run: |
+          python - <<'EOF'
+          import htmlmin, os
+          filename = "Mangrove_COVERAGE_map.html"
+          if os.path.exists(filename):
+              html = open(filename).read()
+              minified = htmlmin.minify(html, remove_empty_space=True)
+              open(filename, "w").write(minified)
+              print(f" Minified {filename}")
+          else:
+              print(" HTML file not found, skipping minification.")
+          EOF
 
       - name: Commit and push results
         run: |
           git config user.name "Map Bot"
           git config user.email "bot@example.com"
-
-          # Make sure we’re up to date before pushing
           git fetch origin main
           git rebase origin/main || echo "No rebase needed"
 
           git add Mangrove_COVERAGE_map.html
           git commit -m "Automated map update" || echo "No changes to commit"
-
-          # Push updated map
           git push origin main
+
+      # Warm up GitHub Pages cache for instant loading
+      - name: Warm up GitHub Pages cache
+        run: |
+          sleep 10  # wait 10 seconds for GitHub Pages to update
+          curl -s https://dllmekongdelta.github.io/gee-mekong-map-dll/Mangrove_COVERAGE_map.html > /dev/null && echo "Cache warmed"
