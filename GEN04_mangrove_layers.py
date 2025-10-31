@@ -32,10 +32,6 @@ landsat2005 = HF.get_landsat_composite("LANDSAT/LE07/C02/T1_L2", 2005, aoi_def.a
 landsat2010 = HF.get_landsat_composite("LANDSAT/LE07/C02/T1_L2", 2010, aoi_def.aoi)
 # Landsat 8 for 2015
 landsat2015 = HF.get_landsat_composite("LANDSAT/LC08/C02/T1_L2", 2015, aoi_def.aoi)
-## landsat 8 for 2020 
-# landsat2020 = get_landsat_composite("LANDSAT/LC08/C02/T1_L2", 2020, aoi)
-## landsat9 for 2025
-# landsat2025 = get_landsat_composite("LANDSAT/LC09/C02/T1_L2", 2025, aoi)
 
 # Sentinel 2 for 2020, 2025
 sentinel2020 = HF.get_sentinel_composite("COPERNICUS/S2_SR_HARMONIZED", 2020, aoi_def.aoi)
@@ -56,7 +52,7 @@ sentinel2025 = HF.add_ndvi(sentinel2025, "S2")
 
 
 # ------------- Threshold NDVI for mangroves ------------
-ndvi_threshold = 0.1
+ndvi_threshold = 0.2
 
 #--------------  Create mangrove layers ---------------
 mangrove_1988 = landsat1988.select("NDVI").gt(ndvi_threshold)

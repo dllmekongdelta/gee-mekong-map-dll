@@ -78,8 +78,8 @@ for _, row in gdf_sea_dikes.iterrows():
     <br>Segment: {row['Segment']}
     <br>Type: {row['Type']}
     <br>Length (m): {row['Length_m']}
-    <br>SPWs Type:</b> {row['SPWs_type']}
-    <br>L_SPWs (m):</b> {row['L_SPWs_m']}<br><br>
+    <!-- <br>SPWs Type:</b> {row['SPWs_type']} -->
+    <!-- <br>L_SPWs (m):</b> {row['L_SPWs_m']}<br> --> <br>
     <a href="https://www.livinglabmekongdelta.com/seadike" target="_blank">
     For more information about sea dikes, click here</a>
     """

@@ -27,10 +27,10 @@ legend_dict_mangrove_LOSS = {
     "Breakwaters": ML.color_breakwater    
     }
 legend_dict_mangrove_GAIN = {
-    "Mangrove gain (1988-1990)": ML.color_1988_1992_gain,
-    "Mangrove gain (1990-1995)": ML.color_1992_1997_gain,
-    "Mangrove gain (1995-2000)": ML.color_1997_2001_gain,
-    "Mangrove gain (2000-2005)": ML.color_2001_2005_gain,
+    "Mangrove gain (1988-1992)": ML.color_1988_1992_gain,
+    "Mangrove gain (1992-1997)": ML.color_1992_1997_gain,
+    "Mangrove gain (1997-2001)": ML.color_1997_2001_gain,
+    "Mangrove gain (2001-2005)": ML.color_2001_2005_gain,
     "Mangrove gain (2005-2010)": ML.color_2005_2010_gain,
     "Mangrove gain (2010-2015)": ML.color_2010_2015_gain,
     "Mangrove gain (2015-2020)": ML.color_2015_2020_gain,
