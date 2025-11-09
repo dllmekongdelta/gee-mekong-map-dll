@@ -52,7 +52,7 @@ sentinel2025 = HF.add_ndvi(sentinel2025, "S2")
 
 
 # ------------- Threshold NDVI for mangroves ------------
-ndvi_threshold = 0.2
+ndvi_threshold = 0.1
 
 #--------------  Create mangrove layers ---------------
 mangrove_1988 = landsat1988.select("NDVI").gt(ndvi_threshold)
