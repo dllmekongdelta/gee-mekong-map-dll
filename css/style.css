@@ -1,0 +1,391 @@
+/* ====================================
+   Mekong Delta Mangrove Mapping
+   Main Stylesheet
+   ==================================== */
+
+/* Variables */
+:root {
+    --primary-green: #1a9850;
+    --dark-green: #006d2c;
+    --light-green: #e5f5f9;
+    --loss-purple: #810F7C;
+    --gain-blue: #1565c0;
+}
+
+/* Reset & Base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+    min-height: 100vh;
+}
+
+/* ====================================
+   Header
+   ==================================== */
+.header {
+    background: linear-gradient(135deg, var(--dark-green) 0%, var(--primary-green) 100%);
+    color: white;
+    padding: 20px 0;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.logo-section img {
+    height: 70px;
+    background: white;
+    padding: 8px;
+    border-radius: 10px;
+}
+
+.title-section h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.title-section p {
+    font-size: 1rem;
+    opacity: 0.9;
+}
+
+/* ====================================
+   Language Toggle
+   ==================================== */
+.lang-toggle {
+    display: flex;
+    gap: 5px;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 5px;
+    border-radius: 30px;
+}
+
+.lang-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.lang-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.lang-btn.active {
+    background: white;
+    color: var(--dark-green);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* ====================================
+   Navigation Tabs
+   ==================================== */
+.nav-section {
+    background: white;
+    padding: 15px 0;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.nav-tabs-custom {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.nav-tab {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Coverage Tab */
+.nav-tab.coverage {
+    background: #e8f5e9;
+    color: var(--primary-green);
+}
+
+.nav-tab.coverage:hover,
+.nav-tab.coverage.active {
+    background: var(--primary-green);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(26, 152, 80, 0.4);
+}
+
+/* Gain Tab */
+.nav-tab.gain {
+    background: #e3f2fd;
+    color: var(--gain-blue);
+}
+
+.nav-tab.gain:hover,
+.nav-tab.gain.active {
+    background: var(--gain-blue);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(21, 101, 192, 0.4);
+}
+
+/* Loss Tab */
+.nav-tab.loss {
+    background: #fce4ec;
+    color: var(--loss-purple);
+}
+
+.nav-tab.loss:hover,
+.nav-tab.loss.active {
+    background: var(--loss-purple);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(129, 15, 124, 0.4);
+}
+
+/* ====================================
+   Map Container
+   ==================================== */
+.map-container {
+    padding: 20px;
+}
+
+.map-frame-wrapper {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.12);
+}
+
+.map-header {
+    padding: 15px 25px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.map-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.map-badge {
+    padding: 6px 15px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.map-badge.coverage {
+    background: #e8f5e9;
+    color: var(--primary-green);
+}
+
+.map-badge.gain {
+    background: #e3f2fd;
+    color: var(--gain-blue);
+}
+
+.map-badge.loss {
+    background: #fce4ec;
+    color: var(--loss-purple);
+}
+
+.map-frame {
+    width: 100%;
+    height: calc(100vh - 280px);
+    min-height: 500px;
+    border: none;
+}
+
+.map-panel {
+    display: none;
+}
+
+.map-panel.active {
+    display: block;
+}
+
+/* ====================================
+   Open New Tab Button
+   ==================================== */
+.open-new-tab {
+    padding: 8px 16px;
+    background: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    color: #555;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.open-new-tab:hover {
+    background: #e9ecef;
+    color: #333;
+}
+
+/* ====================================
+   Info Section
+   ==================================== */
+.info-section {
+    padding: 40px 20px;
+    background: white;
+}
+
+.info-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
+    border-radius: 15px;
+    padding: 25px;
+    height: 100%;
+    border: 1px solid #eee;
+    transition: all 0.3s ease;
+}
+
+.info-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.info-card i {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+}
+
+.info-card.coverage i { 
+    color: var(--primary-green); 
+}
+
+.info-card.gain i { 
+    color: var(--gain-blue); 
+}
+
+.info-card.loss i { 
+    color: var(--loss-purple); 
+}
+
+.info-card h5 {
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.info-card p {
+    color: #666;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+/* ====================================
+   Footer
+   ==================================== */
+.footer {
+    background: #2c3e50;
+    color: white;
+    padding: 30px 0;
+    text-align: center;
+}
+
+.footer p {
+    margin: 0;
+    opacity: 0.8;
+}
+
+.footer a {
+    color: #3498db;
+    text-decoration: none;
+}
+
+/* ====================================
+   Responsive Design
+   ==================================== */
+@media (max-width: 768px) {
+    .title-section h1 {
+        font-size: 1.4rem;
+    }
+    
+    .nav-tab {
+        padding: 10px 20px;
+        font-size: 0.9rem;
+    }
+    
+    .map-frame {
+        height: 60vh;
+        min-height: 400px;
+    }
+    
+    .logo-section {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .map-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .header-content {
+        justify-content: center;
+    }
+    
+    .lang-toggle {
+        margin-top: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .nav-tabs-custom {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .nav-tab {
+        width: 100%;
+        max-width: 250px;
+        justify-content: center;
+    }
+    
+    .lang-btn {
+        padding: 6px 12px;
+        font-size: 0.85rem;
+    }
+}
