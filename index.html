@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mekong Delta Living Lab</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo-section">
+                    <img src="images/logo/Living_lab_logo_optie_1.png" alt="Living Lab Logo">
+                    <div class="title-section">
+                        <h1><i class="fas fa-leaf me-2"></i><span data-i18n="title">Mekong Delta Living Lab</span></h1>
+                        <p data-i18n="subtitle">An Open-Air Laboratory for Coastal Protection and Nature-based Solution</p>
+                    </div>
+                </div>
+                <div class="lang-toggle">
+                    <button class="lang-btn active" onclick="setLanguage('en')">
+                        <span>EN</span>
+                    </button>
+                    <button class="lang-btn" onclick="setLanguage('vi')">
+                        <span>VI</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Navigation Tabs -->
+    <nav class="nav-section">
+        <div class="container">
+            <div class="nav-tabs-custom">
+                <button class="nav-tab coverage active" onclick="showMap('coverage')">
+                    <i class="fas fa-tree"></i>
+                    <span data-i18n="nav_coverage">Coverage Map</span>
+                </button>
+                <button class="nav-tab gain" onclick="showMap('gain')">
+                    <i class="fas fa-arrow-up"></i>
+                    <span data-i18n="nav_gain">Gain Map</span>
+                </button>
+                <button class="nav-tab loss" onclick="showMap('loss')">
+                    <i class="fas fa-arrow-down"></i>
+                    <span data-i18n="nav_loss">Loss Map</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Map Container -->
+    <main class="map-container">
+        <div class="container-fluid">
+            <!-- Coverage Map -->
+            <div id="coverage-panel" class="map-panel active">
+                <div class="map-frame-wrapper">
+                    <div class="map-header">
+                        <div>
+                            <span class="map-title" data-i18n="map_coverage_title">Mangrove Coverage Map</span>
+                            <span class="map-badge coverage ms-2">1988-2025</span>
+                        </div>
+                        <a href="Mangrove_COVERAGE_map.html" target="_blank" class="open-new-tab">
+                            <i class="fas fa-external-link-alt"></i>
+                            <span data-i18n="open_fullscreen">Open Full Screen</span>
+                        </a>
+                    </div>
+                    <iframe class="map-frame" src="Mangrove_COVERAGE_map.html" title="Mangrove Coverage Map"></iframe>
+                </div>
+            </div>
+            
+            <!-- Gain Map -->
+            <div id="gain-panel" class="map-panel">
+                <div class="map-frame-wrapper">
+                    <div class="map-header">
+                        <div>
+                            <span class="map-title" data-i18n="map_gain_title">Mangrove Gain Map</span>
+                            <span class="map-badge gain ms-2">1988-2025</span>
+                        </div>
+                        <a href="Mangrove_GAIN_map.html" target="_blank" class="open-new-tab">
+                            <i class="fas fa-external-link-alt"></i>
+                            <span data-i18n="open_fullscreen">Open Full Screen</span>
+                        </a>
+                    </div>
+                    <iframe class="map-frame" src="Mangrove_GAIN_map.html" title="Mangrove Gain Map"></iframe>
+                </div>
+            </div>
+            
+            <!-- Loss Map -->
+            <div id="loss-panel" class="map-panel">
+                <div class="map-frame-wrapper">
+                    <div class="map-header">
+                        <div>
+                            <span class="map-title" data-i18n="map_loss_title">Mangrove Loss Map</span>
+                            <span class="map-badge loss ms-2">1988-2025</span>
+                        </div>
+                        <a href="Mangrove_LOSS_map.html" target="_blank" class="open-new-tab">
+                            <i class="fas fa-external-link-alt"></i>
+                            <span data-i18n="open_fullscreen">Open Full Screen</span>
+                        </a>
+                    </div>
+                    <iframe class="map-frame" src="Mangrove_LOSS_map.html" title="Mangrove Loss Map"></iframe>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Info Section -->
+    <section class="info-section">
+        <div class="container">
+            <h3 class="text-center mb-4" data-i18n="about_title">About the Maps</h3>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="info-card coverage">
+                        <i class="fas fa-tree"></i>
+                        <h5 data-i18n="info_coverage_title">Mangrove Coverage Map</h5>
+                        <p data-i18n="info_coverage_desc">This map shows mangrove coverage for different years (ranging from 1988 to 2025). Using the menu in the top-right corner, you can toggle the different layers on and off to look at the mangrove coverage for a specific year.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="info-card gain">
+                        <i class="fas fa-seedling"></i>
+                        <h5 data-i18n="info_gain_title">Mangrove Gain Map</h5>
+                        <p data-i18n="info_gain_desc">This map shows mangrove gain from 1988 to 2025. The map also displays various human interventions such as sea dikes, breakwaters, and mangrove restoration projects. By clicking on these interventions, you can access additional information. Using the menu in the top-right corner, you can toggle the different layers on and off to explore the data in more detail.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="info-card loss">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h5 data-i18n="info_loss_title">Mangrove Loss Map</h5>
+                        <p data-i18n="info_loss_desc">This map shows mangrove loss from 1988 to 2025. The map also displays various human interventions such as sea dikes, breakwaters, and mangrove restoration projects. By clicking on these interventions, you can access additional information. The commune boundaries are included as well. Using the menu in the top-right corner, you can toggle the different layers on and off to explore the data in more detail.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p><span data-i18n="footer_title">Digital Living Lab</span></p>
+        </div>
+    </footer>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/i18n.js"></script>
+    <script>
+        function showMap(mapType) {
+            // Hide all panels
+            document.querySelectorAll('.map-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            
+            // Remove active from all tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected panel
+            document.getElementById(mapType + '-panel').classList.add('active');
+            
+            // Activate selected tab
+            document.querySelector('.nav-tab.' + mapType).classList.add('active');
+        }
+        
+        // Initialize language on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedLang = localStorage.getItem('language') || 'en';
+            setLanguage(savedLang);
+        });
+    </script>
+</body>
+</html>
