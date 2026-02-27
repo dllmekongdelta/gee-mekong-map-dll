@@ -29,6 +29,7 @@ jobs:
           pip install \
             earthengine-api \
             geemap \
+            python-box \
             folium \
             branca \
             jinja2 \
