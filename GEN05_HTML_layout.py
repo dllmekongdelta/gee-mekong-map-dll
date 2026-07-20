@@ -22,7 +22,8 @@ legend_dict_mangrove_LOSS = {
     "Mangrove loss (2010-2015)": ML.color_2010_2015_loss,
     "Mangrove loss (2015-2020)": ML.color_2015_2020_loss,
     "Mangrove loss (2020-2025)": ML.color_2020_2025_loss,
-    "Commune boundaries": ML.color_commune, 
+    "Mangrove loss (2025-2026)": ML.color_2025_2026_loss,
+    "Commune boundaries": ML.color_commune,
     "Sea dikes": ML.color_sea_dike,
     "Breakwaters": ML.color_breakwater    
     }
@@ -35,7 +36,8 @@ legend_dict_mangrove_GAIN = {
     "Mangrove gain (2010-2015)": ML.color_2010_2015_gain,
     "Mangrove gain (2015-2020)": ML.color_2015_2020_gain,
     "Mangrove gain (2020-2025)": ML.color_2020_2025_gain,
-    "Commune boundaries": ML.color_commune, 
+    "Mangrove gain (2025-2026)": ML.color_2025_2026_gain,
+    "Commune boundaries": ML.color_commune,
     "Sea dikes": ML.color_sea_dike,
     "Breakwaters": ML.color_breakwater   
 }
@@ -87,6 +89,20 @@ def add_folium_legend(m, title, legend_dict, style=None):
 
     legend_html += "</div>"
     m.get_root().html.add_child(folium.Element(legend_html))
+
+
+# ### Page title & favicon
+# folium's Map.to_html() doesn't set a <title> or favicon by default, so the
+# browser tab falls back to showing the raw filename and a generic icon.
+
+# In[2b]:
+
+
+def set_page_meta(m, title, favicon="images/logo/icon.png"):
+    m.get_root().title = title
+    m.get_root().header.add_child(
+        folium.Element(f'<link rel="icon" href="{favicon}" type="image/png">')
+    )
 
 
 # ### Scalebar
@@ -182,7 +198,7 @@ logo_html = """
      justify-content: center;                     /* center horizontally again for safety */
      height: 90px;                                /* smaller white box height */
 ">
-     <img src="images/logo/Living_lab_logo_optie_1.png" height="80px" style="width:auto;">
+     <img src="images/logo/logo-Living_lab.png" height="80px" style="width:auto;">
 </div>
 """
 
