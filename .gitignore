@@ -1,0 +1,22 @@
+# GEE credentials (written locally or by GitHub Actions, must never be committed)
+key.json
+*.pem
+.env
+
+# Python environment
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Notebook -> script exports generated during CI (jupyter nbconvert --to python)
+MAP01_Mangrove_LOSS.py
+MAP02_Mangrove_GAIN.py
+MAP03_Mangrove_COVERAGE.py
+
+# OS / editor
+.DS_Store
+Thumbs.db
