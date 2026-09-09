@@ -107,10 +107,17 @@ for _, row in gdf_sea_dikes.iterrows():
 # In[12]:
 
 
-# -------------- Add breakwaters ----------------
+# -------------- Add breakwaters & revetments ----------------
 
-# Create one feature group for all breakwaters
+# Two feature groups so each can be toggled independently in the layer
+# control -- the shapefile's Type field distinguishes them:
+#   "Kè xa bờ"  (offshore/detached breakwater)  -> breakwaters_group, yellow
+#   "Kè sát bờ" (nearshore/attached revetment)   -> revetments_group,  blue
 breakwaters_group = folium.FeatureGroup(name="Breakwaters", show=True)
+revetments_group = folium.FeatureGroup(name="Revetments", show=True)
+
+TYPE_BREAKWATER = "Kè xa bờ"
+TYPE_REVETMENT = "Kè sát bờ"
 
 # Single consolidated shapefile (85 real interventions with Name/Type/Year
 # attributes) replaces the old Shapefile1.shp..Shapefile8.shp placeholders,
@@ -134,11 +141,6 @@ breakwaters_path = "shapefile_breakwaters/Interventions.shp"
 gdf_breakwaters = gpd.read_file(breakwaters_path, encoding="utf-8")
 gdf_breakwaters = gdf_breakwaters.set_crs(epsg=3405, allow_override=True).to_crs(epsg=4326)
 
-breakwater_style = lambda feature: {
-    "color": ML.color_breakwater,       # Yellow outline
-    "weight": 5,              # Line thickness
-}
-
 
 def _breakwater_popup(row):
     year = "chưa rõ" if pd.isna(row["Year"]) else int(row["Year"])
@@ -152,11 +154,14 @@ def _breakwater_popup(row):
 
 
 for _, row in gdf_breakwaters.iterrows():
+    is_revetment = row["Type"] == TYPE_REVETMENT
+    color = ML.color_revetment if is_revetment else ML.color_breakwater
+    group = revetments_group if is_revetment else breakwaters_group
     folium.GeoJson(
         row.geometry.__geo_interface__,
-        style_function=breakwater_style,
+        style_function=lambda feature, color=color: {"color": color, "weight": 5},
         popup=folium.Popup(_breakwater_popup(row), max_width=300),
-    ).add_to(breakwaters_group)
+    ).add_to(group)
 
 
 # 

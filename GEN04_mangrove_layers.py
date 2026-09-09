@@ -156,5 +156,28 @@ color_mangrove_coverage = "#1a9850"
 # -------------- Set color for shapefile layers --------------------
 color_commune = "#008B8B"
 color_sea_dike = "#F18D09"
-color_breakwater = "#E6EE0F" 
+
+# Breakwaters ("Kè xa bờ", offshore/detached) and revetments ("Kè sát bờ",
+# nearshore/attached) are two subtypes of the same coastal-protection
+# category ("kè"), not two unrelated layers, so they read as one visual
+# family here -- but not via a *hue* family. Two hued attempts both failed:
+#   - Single blue hue, light+dark (like LOSS/GAIN's ramps): the dark step
+#     nearly vanished against the satellite basemap's water and the
+#     mangrove-gain/coverage green fill (WCAG contrast ~1.1-1.15).
+#   - Yellow -> warm gold: fixed the water/green problem (contrast 1.9-8.0),
+#     but gold's hue (~30°) lands right next to color_sea_dike's hue (~34°)
+#     -- the two looked like the same color on the map even though WCAG
+#     contrast was fine, since WCAG only measures lightness, not hue.
+# The hue wheel is too crowded to find 2 more hues clear of sea_dike (34°),
+# commune (180°), the green fill (146°) AND the purple LOSS fill (303°) at
+# once. So breakwater stays neutral gray (zero saturation can't hue-clash
+# with anything, and it doubles as a fitting "built infrastructure" color
+# against the ecological/administrative layers), and revetment is a light
+# pink (hue 0°) picked specifically for being far from every other hue in
+# use (34/146/180/303°) while staying light enough not to repeat the blue
+# attempt's mistake of going dark against water/purple:
+#   color_breakwater #E8E8E8  vs green=3.03 vs purple=7.48 vs water=9.37
+#   color_revetment  #FFB4B4  vs green=2.20 vs purple=5.43 vs water=6.80
+color_breakwater = "#E8E8E8"  # light silver-gray
+color_revetment = "#FFB4B4"   # light pink/salmon
 
