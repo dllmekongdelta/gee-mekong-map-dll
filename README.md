@@ -84,6 +84,31 @@ is never committed (see [`.gitignore`](.gitignore)). With both secrets set,
 `GEN01_GEE_Authenticate.py` automatically uses the service account branch
 instead of the interactive login.
 
+## Area & change analysis (for research write-ups)
+
+[`MAP04_Area_Analysis.ipynb`](MAP04_Area_Analysis.ipynb) quantifies what
+`MAP01`-`MAP03` only show visually: mangrove coverage (ha) per year, gross
+loss/gain (ha) per period, and an NDVI-threshold robustness check (does a
+detected trend hold if the classification threshold is changed?). It reuses
+the exact same `mangrove_YYYY` masks the maps are built from, so its numbers
+are always consistent with what the maps display. Outputs (CSV tables + PNG
+figures) are written to `area_analysis/`. Expect ~15-20 minutes to run in
+full (each area calculation is a live Earth Engine query).
+
+## Viewing directly in the GEE Code Editor
+
+[`gee_code_editor/mangrove_analysis.js`](gee_code_editor/mangrove_analysis.js)
+is a standalone JavaScript port of `GEN01`-`GEN04` + `MAP01`-`MAP03`, meant to
+be pasted into [code.earthengine.google.com](https://code.earthengine.google.com)
+for interactive exploration (pan/zoom, Inspector, native Layers panel) without
+the GitHub Pages site or the Python pipeline. It reproduces the same AOI,
+composites, NDVI threshold, and color ramps — see the usage/scope notes in
+the file's header comment for exactly what it does and doesn't carry over
+(the shapefile context layers need a one-time manual asset upload on your own
+GEE account, since Code Editor can't read local `.shp` files directly). The
+existing site and pipeline are unaffected by this — it's an additional,
+independent way to view the same analysis, not a replacement.
+
 ## Legend color ramps
 
 The LOSS and GAIN legends use one color per time interval (e.g. "2020-2025").

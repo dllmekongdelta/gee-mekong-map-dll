@@ -20,3 +20,10 @@ MAP03_Mangrove_COVERAGE.py
 # OS / editor
 .DS_Store
 Thumbs.db
+
+# Paper/analysis deliverables (local working materials, not part of the
+# live site or the GEN/MAP0[1-3] pipeline that generates it)
+MAP05_Validation_RecentChange.ipynb
+BaoCao_BienDong_RungNgapMan_Nhap.docx
+_threshold_sweep.csv
+area_analysis/

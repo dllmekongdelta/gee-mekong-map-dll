@@ -15,7 +15,11 @@ import glob                            # File pattern matching (e.g., list all .
 
 # ---- Add commune boundaries shapefile ----
 commune_path = "shapefile_commune/VungNghiencuu.shp"  # path to your shapefile
-gdf_commune = gpd.read_file(commune_path)
+# encoding="utf-8": the .dbf has no .cpg sidecar file, so GDAL/pyogrio guesses
+# an encoding (cp1252/cp1258) instead of detecting it -- the guess is wrong and
+# mangles every Vietnamese diacritic (e.g. "Bình An" -> "BÃ¬nh An"). The .dbf
+# itself is UTF-8, confirmed by testing candidate encodings directly.
+gdf_commune = gpd.read_file(commune_path, encoding="utf-8")
 
 # Convert GeoDataFrame to GeoJSON for Folium
 geojson_commune = gdf_commune.__geo_interface__
@@ -108,81 +112,51 @@ for _, row in gdf_sea_dikes.iterrows():
 # Create one feature group for all breakwaters
 breakwaters_group = folium.FeatureGroup(name="Breakwaters", show=True)
 
-# Define popup text for each shapefile (order matches file order)
-popup_texts_BW = [
-    # Shapefile 1
-    '<b>Detached riprap pillar breakwater</b><br><br>'
-    '<img src="images/breakwaters/detached_riprap_pillar.JPG" width="200px"><br>'
-    '<br>Construction year: 2019.<br>'
-    'From 2016-2019, the site was protected by a bamboo fence instead of the breakwater.<br><br>'
-    '<a href="https://www.livinglabmekongdelta.com/breakwaters" target="_blank">For more information about breakwaters, click here.</a>', 
-
-    # Shapefile 2
-    '<b>Perforated dome breakwater</b><br><br>'
-    '<img src="images/breakwaters/perforated_dome.JPG" width="200px"><br>'
-    '<br>Construction year: 2019.<br>'
-    'From 2012-2019, the site was protected by a bamboo fence instead of the breakwater.<br><br>'
-    '<a href="https://www.livinglabmekongdelta.com/breakwaters" target="_blank">For more information about breakwaters, click here.</a>', 
-
-    # Shapefile 3
-    '<b>Detached riprap pillar breakwater</b><br><br>'
-    '<img src="images/breakwaters/detached_riprap_pillar.JPG" width="200px"><br>'
-    '<br>Construction year: 2019.<br>'
-    'From 2012-2019, the site was protected by a bamboo fence instead of the breakwater.<br><br>'
-    '<a href="https://www.livinglabmekongdelta.com/breakwaters" target="_blank">For more information about breakwaters, click here.</a>',
-    
-    # Shapefile 4
-    '<b>Detached riprap pillar breakwater</b><br><br>'
-    '<img src="images/breakwaters/detached_riprap_pillar.JPG" width="200px"><br>'
-    '<br>Construction year: 2019.<br>'
-    'From 2012-2019, the site was protected by a bamboo fence instead of the breakwater.<br><br>'
-    '<a href="https://www.livinglabmekongdelta.com/breakwaters" target="_blank">For more information about breakwaters, click here.</a>', 
-
-    # Shapefile 5
-    '<b>Detached riprap pillar breakwater</b><br><br>'
-    '<img src="images/breakwaters/detached_riprap_pillar.JPG" width="200px"><br>'
-    '<br>Construction year: 2019.<br>'
-    'From 2012-2019, the site was protected by a bamboo fence instead of the breakwater.<br><br>'
-    '<a href="https://www.livinglabmekongdelta.com/breakwaters" target="_blank">For more information about breakwaters, click here.</a>', 
- 
-    # Shapefile 6
-    '<b>Detached riprap pillar breakwater</b><br><br>'
-    '<img src="images/breakwaters/detached_riprap_pillar.JPG" width="200px"><br>'
-    '<br>Construction year: 2019.<br>'
-    'From 2012-2019, the site was protected by a bamboo fence instead of the breakwater.<br><br>'
-    '<a href="https://www.livinglabmekongdelta.com/breakwaters" target="_blank">For more information about breakwaters, click here.</a>', 
-
-    # Shapefile 7
-    '<b>Revetment</b><br><br>'
-    '<img src="images/breakwaters/revetment.jpg" width="200px"><br>'
-    '<br>Construction year: 2020.<br><br>'
-    '<a href="https://www.livinglabmekongdelta.com/breakwaters" target="_blank">For more information about breakwaters, click here.</a>', 
-
-    # Shapefile 8
-    '<b>Detached riprap pillar breakwater</b><br><br>'
-    '<img src="images/breakwaters/detached_riprap_pillar.JPG" width="200px"><br>'
-    '<br>Construction year: 2025.<br><br>'
-    '<a href="https://www.livinglabmekongdelta.com/breakwaters" target="_blank">For more information about breakwaters, click here.</a>', 
-
-]
-
-# Loop through shapefiles in the folder
-shapefiles_BW = sorted(glob.glob("shapefile_breakwaters/*.shp"))
+# Single consolidated shapefile (85 real interventions with Name/Type/Year
+# attributes) replaces the old Shapefile1.shp..Shapefile8.shp placeholders,
+# which carried no usable attributes and were paired 1:1 by file order with
+# 8 hardcoded generic English popup strings that didn't actually describe
+# the digitized features. Popups are now built per-feature from the real
+# attribute data instead.
+#
+# encoding="utf-8": no .cpg sidecar next to the .dbf, so GDAL/pyogrio guesses
+# an encoding and mangles the Vietnamese diacritics in the Name field -- same
+# failure mode as shapefile_commune (see README > "Legend color ramps").
+#
+# VN-2000 / UTM zone 48N (EPSG:3405): no .prj sidecar either. Raw coordinates
+# are in the ~470,000-700,000 / ~950,000-1,150,000 range -- UTM-scale, not
+# lon/lat -- consistent with VN-2000 UTM48N, the standard projection for
+# Vietnamese government coastal-engineering GIS deliverables (this dataset
+# references official programs like DPNSTW/SP-RCC). WGS84 UTM48N (EPSG:32648)
+# reprojects to within ~200m of the same spot -- immaterial for a reference
+# line layer, but revisit this assumption if the true source CRS is known.
+breakwaters_path = "shapefile_breakwaters/Interventions.shp"
+gdf_breakwaters = gpd.read_file(breakwaters_path, encoding="utf-8")
+gdf_breakwaters = gdf_breakwaters.set_crs(epsg=3405, allow_override=True).to_crs(epsg=4326)
 
 breakwater_style = lambda feature: {
     "color": ML.color_breakwater,       # Yellow outline
     "weight": 5,              # Line thickness
 }
 
-for shp, popup_html in zip(shapefiles_BW, popup_texts_BW):
-    gdf = gpd.read_file(shp)
-    geojson_data = gdf.__geo_interface__
 
+def _breakwater_popup(row):
+    year = "chưa rõ" if pd.isna(row["Year"]) else int(row["Year"])
+    return (
+        f"<b>{row['Name']}</b><br><br>"
+        f"Loại công trình: {row['Type']}<br>"
+        f"Năm xây dựng: {year}<br><br>"
+        '<a href="https://www.livinglabmekongdelta.com/breakwaters" target="_blank">'
+        "For more information about breakwaters, click here.</a>"
+    )
+
+
+for _, row in gdf_breakwaters.iterrows():
     folium.GeoJson(
-        geojson_data,
+        row.geometry.__geo_interface__,
         style_function=breakwater_style,
-        popup=folium.Popup(popup_html, max_width=300)
-    ).add_to(breakwaters_group)    
+        popup=folium.Popup(_breakwater_popup(row), max_width=300),
+    ).add_to(breakwaters_group)
 
 
 # 
