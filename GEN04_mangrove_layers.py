@@ -62,19 +62,33 @@ sentinel2026 = HF.add_ndvi(sentinel2026, "S2")
 
 
 # ------------- Threshold NDVI for mangroves ------------
-ndvi_threshold = 0.1
+# Per-sensor, not a single global constant: a threshold sweep validated against
+# an independent reference (Global Mangrove Watch v3, on GEE) for years that
+# overlap both products (1996/1997, 2010, 2015, 2020) showed the two sensor
+# families need different thresholds to both minimize commission error (false
+# "mangrove" pixels) and keep the best possible agreement (Kappa) with GMW:
+#   - Landsat (5/7/8): Kappa is highest at the original 0.1 and drops
+#     monotonically as the threshold rises (e.g. 2010: Kappa 0.787 @0.10 vs
+#     0.479 @0.30) -> keep 0.1.
+#   - Sentinel-2: Kappa is essentially flat across 0.10-0.30 (0.745-0.748),
+#     so raising the threshold there is a free win against commission error
+#     -> 0.25 cuts User's Accuracy error roughly a third (0.645 -> 0.684)
+#     for zero Kappa cost (2020: 0.745 @0.10 vs 0.748 @0.25).
+# See MAP05_Validation_RecentChange.ipynb (Part 1) for the full sweep/numbers.
+ndvi_threshold_landsat = 0.1
+ndvi_threshold_sentinel = 0.25
 
 #--------------  Create mangrove layers ---------------
-mangrove_1988 = landsat1988.select("NDVI").gt(ndvi_threshold)
-mangrove_1992 = landsat1992.select("NDVI").gt(ndvi_threshold)
-mangrove_1997 = landsat1997.select("NDVI").gt(ndvi_threshold)
-mangrove_2001 = landsat2001.select("NDVI").gt(ndvi_threshold)
-mangrove_2005 = landsat2005.select("NDVI").gt(ndvi_threshold)
-mangrove_2010 = landsat2010.select("NDVI").gt(ndvi_threshold)
-mangrove_2015 = landsat2015.select("NDVI").gt(ndvi_threshold)
-mangrove_2020 = sentinel2020.select("NDVI").gt(ndvi_threshold)
-mangrove_2025 = sentinel2025.select("NDVI").gt(ndvi_threshold)
-mangrove_2026 = sentinel2026.select("NDVI").gt(ndvi_threshold)
+mangrove_1988 = landsat1988.select("NDVI").gt(ndvi_threshold_landsat)
+mangrove_1992 = landsat1992.select("NDVI").gt(ndvi_threshold_landsat)
+mangrove_1997 = landsat1997.select("NDVI").gt(ndvi_threshold_landsat)
+mangrove_2001 = landsat2001.select("NDVI").gt(ndvi_threshold_landsat)
+mangrove_2005 = landsat2005.select("NDVI").gt(ndvi_threshold_landsat)
+mangrove_2010 = landsat2010.select("NDVI").gt(ndvi_threshold_landsat)
+mangrove_2015 = landsat2015.select("NDVI").gt(ndvi_threshold_landsat)
+mangrove_2020 = sentinel2020.select("NDVI").gt(ndvi_threshold_sentinel)
+mangrove_2025 = sentinel2025.select("NDVI").gt(ndvi_threshold_sentinel)
+mangrove_2026 = sentinel2026.select("NDVI").gt(ndvi_threshold_sentinel)
 
 # --------------- LOSS/GAIN legend color ramps -------------------------
 # Generated (not hand-picked) as single-hue OKLCH ramps with evenly spaced
