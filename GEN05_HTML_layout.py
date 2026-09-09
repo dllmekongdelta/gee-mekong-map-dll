@@ -25,7 +25,8 @@ legend_dict_mangrove_LOSS = {
     "Mangrove loss (2025-2026)": ML.color_2025_2026_loss,
     "Commune boundaries": ML.color_commune,
     "Sea dikes": ML.color_sea_dike,
-    "Breakwaters": ML.color_breakwater    
+    "Breakwaters": ML.color_breakwater,
+    "Revetments": ML.color_revetment
     }
 legend_dict_mangrove_GAIN = {
     "Mangrove gain (1988-1992)": ML.color_1988_1992_gain,
@@ -39,14 +40,16 @@ legend_dict_mangrove_GAIN = {
     "Mangrove gain (2025-2026)": ML.color_2025_2026_gain,
     "Commune boundaries": ML.color_commune,
     "Sea dikes": ML.color_sea_dike,
-    "Breakwaters": ML.color_breakwater   
+    "Breakwaters": ML.color_breakwater,
+    "Revetments": ML.color_revetment
 }
 
 legend_dict_mangrove_COVERAGE = {
     "Mangrove coverage": ML.color_mangrove_coverage,
-    "Commune boundaries": ML.color_commune, 
+    "Commune boundaries": ML.color_commune,
     "Sea dikes": ML.color_sea_dike,
-    "Breakwaters": ML.color_breakwater   
+    "Breakwaters": ML.color_breakwater,
+    "Revetments": ML.color_revetment
 }
 # -------- Legend style ----------
 style = {
