@@ -202,3 +202,54 @@ logo_html = """
 </div>
 """
 
+
+# # Download button
+# Adds a floating "download the source data" pill button over the map, for
+# layers whose underlying shapefile is worth sharing (e.g. Breakwaters).
+# Styled as a real call-to-action (brand gradient, icon, hover lift) rather
+# than a discreet text link, so it reads as an actionable UI control instead
+# of blending into the corner. Default position is bottom-right, stacked
+# directly above the legend (same right-edge alignment) -- pass `bottom` per
+# map to clear that map's legend height, since row count (and so legend
+# height) varies: LOSS/GAIN's legends are much taller (9 interval classes +
+# 3 context layers) than COVERAGE's (1 class + 3 context layers).
+# Uses the fa-download glyph from Font Awesome Free 6, which folium already
+# bundles on every map (verified in the generated HTML: @fortawesome/
+# fontawesome-free@6.2.0/css/all.min.css) -- "fas" prefix to match the solid
+# style used elsewhere on the site (index.html's "Open Full Screen" link).
+
+# In[5b]:
+
+
+def add_download_button(m, url, label, top=None, right="5px", bottom="150px", left=None):
+    pos = {"top": top, "right": right, "bottom": bottom, "left": left}
+    pos_css = "\n         ".join(f"{k}: {v};" for k, v in pos.items() if v is not None)
+    button_html = f"""
+    <div style="
+         position: fixed;
+         {pos_css}
+         z-index: 9999;
+    ">
+        <a href="{url}" download style="
+             display: inline-flex;
+             align-items: center;
+             gap: 8px;
+             background: linear-gradient(135deg, #006d2c 0%, #1a9850 100%);
+             color: #ffffff;
+             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+             font-size: 13px;
+             font-weight: 600;
+             text-decoration: none;
+             padding: 10px 16px;
+             border-radius: 24px;
+             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+             transition: transform 0.15s ease, box-shadow 0.15s ease;
+             white-space: nowrap;
+        " onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 14px rgba(0,0,0,0.35)';"
+          onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 10px rgba(0,0,0,0.3)';">
+            <i class="fas fa-download"></i> {label}
+        </a>
+    </div>
+    """
+    m.get_root().html.add_child(folium.Element(button_html))
+
