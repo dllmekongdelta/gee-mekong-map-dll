@@ -130,24 +130,27 @@ TYPE_REVETMENT = "Kè sát bờ"
 # an encoding and mangles the Vietnamese diacritics in the Name field -- same
 # failure mode as shapefile_commune (see README > "Legend color ramps").
 #
-# VN-2000 / UTM zone 48N (EPSG:3405): no .prj sidecar either. Raw coordinates
+# WGS84 / UTM zone 48N (EPSG:32648): no .prj sidecar either. Raw coordinates
 # are in the ~470,000-700,000 / ~950,000-1,150,000 range -- UTM-scale, not
-# lon/lat -- consistent with VN-2000 UTM48N, the standard projection for
-# Vietnamese government coastal-engineering GIS deliverables (this dataset
-# references official programs like DPNSTW/SP-RCC). WGS84 UTM48N (EPSG:32648)
-# reprojects to within ~200m of the same spot -- immaterial for a reference
-# line layer, but revisit this assumption if the true source CRS is known.
+# lon/lat. An earlier version of this file guessed VN-2000/UTM48N (EPSG:3405)
+# instead, which put every feature ~200m off from its true position --
+# confirmed WGS84 by whoever produced the source data.
 breakwaters_path = "shapefile_breakwaters/Interventions.shp"
 gdf_breakwaters = gpd.read_file(breakwaters_path, encoding="utf-8")
-gdf_breakwaters = gdf_breakwaters.set_crs(epsg=3405, allow_override=True).to_crs(epsg=4326)
+gdf_breakwaters = gdf_breakwaters.set_crs(epsg=32648, allow_override=True).to_crs(epsg=4326)
 
 
 def _breakwater_popup(row):
-    year = "chưa rõ" if pd.isna(row["Year"]) else int(row["Year"])
+    # English by default (Name_EN/Type_EN/Prov_EN), matching the rest of the
+    # site's UI language; the original Vietnamese Name is kept as a small
+    # reference line underneath so the entry stays traceable to its source.
+    year = "unknown" if pd.isna(row["Year"]) else int(row["Year"])
     return (
-        f"<b>{row['Name']}</b><br><br>"
-        f"Loại công trình: {row['Type']}<br>"
-        f"Năm xây dựng: {year}<br><br>"
+        f"<b>{row['Name_EN']}</b><br><br>"
+        f"Type: {row['Type_EN']}<br>"
+        f"Province: {row['Prov_EN']}<br>"
+        f"Year built: {year}<br><br>"
+        f'<span style="color:#888; font-size:11px;">{row["Name"]}</span><br><br>'
         '<a href="https://www.livinglabmekongdelta.com/breakwaters" target="_blank">'
         "For more information about breakwaters, click here.</a>"
     )
