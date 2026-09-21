@@ -3,7 +3,7 @@
 **Dành cho:** người chưa từng dùng Google Earth Engine (GEE), làm việc hoàn toàn trên trình duyệt (Code Editor), không cần cài Python.
 **Kết quả cuối:** 1 bản đồ biến động rừng ngập mặn (mất / mới / ổn định) cho một vùng nhỏ ở Đồng bằng sông Cửu Long (mũi Cà Mau), kèm bảng diện tích và bảng độ chính xác.
 **Thời gian:** khoảng 3–4 giờ nếu làm lần đầu.
-**Căn cứ:** quy trình Python của repo này (`GEN01`–`GEN04`, `MAP03`, `MAP05`) được viết lại bằng JavaScript. Bản JavaScript đầy đủ cho toàn bộ ĐBSCL nằm ở [gee_code_editor/mangrove_analysis.js](../gee_code_editor/mangrove_analysis.js).
+**Căn cứ:** quy trình Python của repo này (`GEN01`–`GEN04`, `MAP03`, `MAP05`) được viết lại bằng JavaScript. Script hoàn chỉnh cho vùng mẫu: [gee_code_editor/bien_dong_rnm_dat_mui.js](../gee_code_editor/bien_dong_rnm_dat_mui.js). Bản JavaScript đầy đủ cho toàn bộ ĐBSCL nằm ở [gee_code_editor/mangrove_analysis.js](../gee_code_editor/mangrove_analysis.js).
 
 ---
 
@@ -132,23 +132,29 @@ Tạo script mới (Scripts → New → File), dán, bấm **Run**:
 
 ```javascript
 // Hello GEE: xem vùng Đất Mũi (Cà Mau) bằng ảnh Sentinel-2 năm 2020
-var aoi = ee.Geometry.Rectangle([104.72, 8.56, 104.92, 8.74]); // [Tây, Nam, Đông, Bắc]
+var aoi = ee.Geometry.Rectangle([104.72, 8.56, 104.92, 8.74]);  // [Tây, Nam, Đông, Bắc]
 
-var anh = ee
-  .ImageCollection("COPERNICUS/S2_SR_HARMONIZED")
-  .filterBounds(aoi)
-  .filterDate("2020-01-01", "2021-01-01")
-  .median()
-  .clip(aoi);
+// Loại điểm ảnh bị mây / bóng mây bằng band SCL (giải thích ở mục 3.5)
+function boMay(img) {
+  var scl = img.select('SCL');
+  var xau = scl.eq(1).or(scl.eq(3)).or(scl.eq(8)).or(scl.eq(9)).or(scl.eq(10));
+  return img.updateMask(xau.not());
+}
+
+var anh = ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
+    .filterBounds(aoi)
+    .filterDate('2020-01-01', '2021-01-01')
+    .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 60))
+    .map(boMay)
+    .median()
+    .clip(aoi);
 
 Map.centerObject(aoi, 11);
-Map.addLayer(
-  anh,
-  { bands: ["B4", "B3", "B2"], min: 0, max: 3000 },
-  "Sentinel-2 2020 (màu thật)",
-);
-print("Các band của ảnh:", anh.bandNames());
+Map.addLayer(anh, {bands: ['B4', 'B3', 'B2'], min: 0, max: 3000}, 'Sentinel-2 2020 (màu thật)');
+print('Các band của ảnh:', anh.bandNames());
 ```
+
+> **Nếu ảnh của bạn trắng xoá:** đó là mây. Vùng ven biển ĐBSCL nhiều mây quanh năm, nên gộp **toàn bộ** ảnh của năm (73 cảnh trong ví dụ này) mà không loại mây thì ảnh ghép vẫn trắng. Hai dòng `filter(...)` và `map(boMay)` ở trên chính là phần loại mây. Bạn có thể xoá chúng đi rồi Run lại để thấy sự khác biệt.
 
 Nếu thấy bản đồ hiện ảnh vệ tinh mũi Cà Mau và Console in danh sách band, bạn đã sẵn sàng cho mục 2.
 
@@ -225,14 +231,14 @@ Code Editor không đọc được file `.shp` trên máy bạn. Phải tải l�
 
 ```javascript
 var xa = ee.FeatureCollection(
-  "projects/<project-của-bạn>/assets/VungNghiencuu",
+  "projects/<project-của-bạn>/assets/VungNghiencuu"
 );
 print("Số đối tượng:", xa.size());
 print(xa.first()); // xem tên cột: ma_xa, ten_xa, ten_huyen, ten_tinh...
 Map.addLayer(
   xa.style({ color: "008B8B", fillColor: "00000000", width: 2 }),
   {},
-  "Ranh giới xã",
+  "Ranh giới xã"
 );
 ```
 
@@ -298,7 +304,7 @@ Map.centerObject(AOI, 11);
 Map.addLayer(
   img2020,
   { bands: ["B4", "B3", "B2"], min: 0, max: 3000 },
-  "Sentinel-2 2020",
+  "Sentinel-2 2020"
 );
 ```
 
@@ -313,45 +319,58 @@ Màu thật cho từng loại ảnh (dùng để kiểm tra bằng mắt):
 ### 3.3 Bắt buộc: đếm số cảnh trong ảnh ghép
 
 ```javascript
-var soCanh = ee
-  .ImageCollection("COPERNICUS/S2_SR_HARMONIZED")
-  .filterBounds(AOI)
-  .filterDate("2025-01-01", "2026-01-01")
-  .filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 20))
-  .size();
-print("Số cảnh năm 2025:", soCanh);
+var soCanh = ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
+    .filterBounds(AOI)
+    .filterDate('2025-01-01', '2026-01-01')
+    .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 20))
+    .size();
+print('Số cảnh năm 2025:', soCanh);
 ```
 
-Ảnh ghép chỉ tin cậy khi có đủ cảnh. Khi chạy thử trên vùng mũi Cà Mau (ngày 21/09/2026), số cảnh **khác nhau rất nhiều giữa các năm**: 2015 có 24 cảnh Landsat 8, 2020 có 16 cảnh Sentinel-2, 2025 chỉ có **4** cảnh Sentinel-2. Ảnh ghép chỉ từ 4 cảnh sẽ nhiễu hơn, dễ tạo "biến động giả" khi so với năm khác. Đây là nguồn sai số lớn nhất khi so sánh hai năm, hãy luôn kiểm tra.
+Ảnh ghép chỉ tin cậy khi có đủ cảnh **và** đã loại mây. Khi chạy thử trên vùng mũi Cà Mau (ngày 21/09/2026), số cảnh Sentinel-2 phụ thuộc rất nhiều vào cách lọc:
+
+| Cách làm                                      | Số cảnh 2020 | Số cảnh 2025 | Ảnh ghép                               |
+| --------------------------------------------- | ------------ | ------------ | -------------------------------------- |
+| Không lọc gì                                  | 73           | (rất nhiều)  | Trắng xoá vì mây                       |
+| Chỉ lọc `CLOUDY_PIXEL_PERCENTAGE` < 20 (repo) | 16           | **4**        | 2020 khá sạch, 2025 còn nhiều mảng mây |
+| Lọc < 60 và loại mây từng điểm ảnh (SCL)      | 33           | 29           | Sạch ở cả hai năm                      |
+
+Ảnh ghép 2025 chỉ có 4 cảnh còn mây, nên khi so với 2020 sẽ tạo ra "biến động giả" (mục 3.5 có số liệu). Hãy luôn kiểm tra số cảnh và xem ảnh màu thật của từng năm trước khi tin vào bản đồ biến động.
 
 ### 3.4 Chọn năm
 
 - Dùng ảnh **cả năm** (như trên), không chọn tuỳ tiện 1 tháng, để năm nào cũng có cùng "mùa" đại diện.
 - Khi có thể, so sánh hai năm **cùng cảm biến** (ví dụ Sentinel-2 2020 với Sentinel-2 2025). Đổi cảm biến giữa hai năm (Landsat → Sentinel-2) có thể tạo chênh lệch do độ phân giải khác nhau (30 m so với 10 m). Repo Python cũng nêu nguyên tắc này khi so sánh 2020 → 2025.
 
-### 3.5 Nâng cấp tuỳ chọn: mặt nạ mây theo điểm ảnh (Sentinel-2)
+### 3.5 Mặt nạ mây theo điểm ảnh (Sentinel-2): nên bật
 
-Nếu ít cảnh vì lọc mây quá chặt, có thể nới ngưỡng mây lên 60% và loại **từng điểm ảnh** bị mây, bóng mây bằng band phân loại `SCL`:
+Lọc theo % mây của **cả cảnh** là chưa đủ: cảnh 15% mây vẫn có mây ngay trên vùng của bạn, còn cảnh 30% mây có thể hoàn toàn sạch ở vùng đó. Cách tốt hơn là nới ngưỡng mây lên 60% (để có nhiều cảnh) và loại **từng điểm ảnh** bị mây, bóng mây bằng band phân loại `SCL`:
 
 ```javascript
 function maskS2(img) {
-  var scl = img.select("SCL");
+  var scl = img.select('SCL');
   // 1 = hỏng/bão hoà, 3 = bóng mây, 8-9 = mây, 10 = mây ti
   var bad = scl.eq(1).or(scl.eq(3)).or(scl.eq(8)).or(scl.eq(9)).or(scl.eq(10));
   return img.updateMask(bad.not());
 }
 
-var s2Sach = ee
-  .ImageCollection("COPERNICUS/S2_SR_HARMONIZED")
-  .filterBounds(AOI)
-  .filterDate("2025-01-01", "2026-01-01")
-  .filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 60))
-  .map(maskS2)
-  .median()
-  .clip(AOI);
+var s2Sach = ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
+    .filterBounds(AOI)
+    .filterDate('2025-01-01', '2026-01-01')
+    .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 60))
+    .map(maskS2)
+    .median()
+    .clip(AOI);
 ```
 
-Trong thử nghiệm ở vùng mẫu, cách này tăng số cảnh 2025 từ 4 lên 29 và làm diện tích rừng năm 2025 từ 23.051 ha lên 24.708 ha (chênh khoảng 7%). Điều đó cho thấy kết quả 2025 nhạy với cách làm ảnh ghép, và là lý do phải kiểm tra như mục 5.5. Script ở mục 6 có công tắc `USE_SCL_MASK` để bật / tắt cách này.
+**Vì sao quan trọng:** trên vùng mẫu, cùng thuật toán và cùng ngưỡng NDVI 0,25, chỉ khác cách loại mây, kết quả biến động 2020 → 2025 khác hẳn:
+
+| Cách loại mây                        | Rừng 2025 (ha) | Mất (ha) | Mới (ha) | Ròng (ha)        |
+| ------------------------------------ | -------------- | -------- | -------- | ---------------- |
+| Chỉ lọc % mây < 20 (4 cảnh, còn mây) | 23.051         | 4.329    | 2.260    | **−2.069** (−8%) |
+| Mặt nạ SCL (29 cảnh, ảnh sạch)       | 24.708         | 2.932    | 2.448    | **−484** (−1,9%) |
+
+Phần lớn mức "giảm 2.069 ha" ở dòng đầu là do mây trong ảnh 2025, không phải rừng mất thật. Script ở mục 6 bật `USE_SCL_MASK = true` theo mặc định.
 
 ---
 
@@ -394,7 +413,7 @@ var img2020n = addNdvi(img2020, "S2");
 Map.addLayer(
   img2020n.select("NDVI"),
   { min: -0.2, max: 0.8, palette: ["0000ff", "ffffcc", "78c679", "006837"] },
-  "NDVI 2020",
+  "NDVI 2020"
 );
 ```
 
@@ -407,7 +426,7 @@ var rung2020 = img2020n.select("NDVI").gt(0.25); // 1 = rừng, 0 = không phả
 Map.addLayer(
   rung2020.updateMask(rung2020),
   { palette: ["1a9850"] },
-  "Rừng ngập mặn 2020",
+  "Rừng ngập mặn 2020"
 );
 ```
 
@@ -433,9 +452,61 @@ Bài học: **ngưỡng phụ thuộc cảm biến và vùng**, phải đối ch
 
 ### 4.4 Giới hạn của phương pháp (nên nói rõ khi báo cáo)
 
-- NDVI không phân biệt rừng ngập mặn với thực vật khác (lúa, cây ăn trái, bờ ao). Kết quả thực chất là "thực vật xanh ven biển" đã hiệu chỉnh theo GMW.
+- NDVI không phân biệt rừng ngập mặn với thực vật khác (lúa, cây ăn trái, bờ ao). Cách giảm lỗi này nằm ở mục 4.5 (giới hạn không gian), không nằm ở việc đổi công thức chỉ số.
 - Không dùng dữ liệu thực địa. Tham chiếu GMW cũng là bản đồ suy ra từ vệ tinh, có sai số riêng.
 - Thuỷ triều, mùa vụ, mây làm NDVI dao động giữa các năm.
+
+### 4.5 Công thức đúng hơn: NDVI kết hợp giới hạn không gian (ROI)
+
+**Vấn đề:** ở vùng có cả đất liền (như khung Đất Mũi), NDVI > ngưỡng cũng bắt lúa, vườn cây, cây trồng. Code Python của repo tránh được vì AOI là dải ven biển vẽ tay, chỉ chứa rừng ngập mặn và ít cây khác.
+
+**Công thức dùng trong script:**
+
+```
+Rừng ngập mặn (năm t) = NDVI(t) > ngưỡng   VÀ   điểm ảnh nằm trong vùng lọc (ROI)
+```
+
+ROI cố định theo thời gian (không đổi giữa hai năm), nên bản đồ biến động không bị "mất / mới" giả do ROI thay đổi. Có hai cách tạo ROI:
+
+1. **Vẽ tay (chính xác nhất, giống code Python):** dùng công cụ Geometry vẽ đa giác dọc dải rừng, đặt tên `vungLoc`, rồi trong script viết `var ROI_POLYGON = vungLoc;`.
+2. **Tự động theo khoảng cách tới biển:** đặt `MAX_DIST_SEA_KM = 5` (mặc định). Script lấy "biển" từ JRC Global Surface Water (nước tồn tại lâu năm), bỏ sông / kênh / ao hẹp, rồi giữ các điểm ảnh cách biển không quá 5 km.
+
+**Tôi đã thử các công thức thay thế và đối chiếu GMW 2020.** Hai vùng thử: vùng chính Đất Mũi (A: `[104.72, 8.56, 104.92, 8.74]`) và một khung khác phía Đông Bắc, nhiều đất liền hơn (B: `[104.80, 8.70, 105.02, 8.86]`). Kappa toàn khung:
+
+| Công thức                                                | Kappa vùng A | Kappa vùng B |
+| -------------------------------------------------------- | ------------ | ------------ |
+| NDVI > 0,25 (cả khung)                                   | **0,593**    | 0,370        |
+| CMRI = NDVI − NDWI > 0,8                                 | 0,501        | 0,466        |
+| MVI = (NIR − Green) / (SWIR1 − Green) > 3                | 0,524        | 0,399        |
+| NDVI > 0,25 và NDMI (độ ẩm) > 0,3                        | 0,478        | 0,464        |
+| NDVI thấp nhất trong năm (P10) > 0,2                     | 0,502        | 0,464        |
+| NDVI > 0,25 và Dynamic World (cây + thực vật ngập) > 0,5 | 0,457        | 0,469        |
+| NDVI > 0,25 và không phải đất nông nghiệp (ESA WorldCover) | 0,593      | 0,400        |
+| **NDVI > 0,25 và cách biển ≤ 5 km**                      | 0,475        | **0,527**    |
+
+Đọc kết quả:
+
+- **Đổi chỉ số (CMRI, MVI, NDMI…) không phải lời giải.** Chúng cải thiện nhẹ ở vùng B nhưng làm kém đi ở vùng A. Thêm điều kiện độ ẩm hay NDVI chặt hơn lên trên ROI cũng chỉ thay đổi Kappa trong khoảng từ −0,04 đến +0,05. Lý do: rừng ngập mặn, ruộng lúa và vườn cây có phổ rất giống nhau ở ảnh cả năm.
+- **Giới hạn không gian mới là yếu tố quyết định ở vùng nhiều đất liền** (vùng B: Kappa 0,37 → 0,53, User's 0,48 → 0,70–0,83).
+- **Nhưng cắt càng hẹp càng mất rừng thật.** Ở vùng A, rừng ngập mặn (theo GMW) vào sâu ít nhất 8 km, nên Kappa toàn khung thấp hơn khi cắt ở 3–5 km:
+
+| Khoảng cách tới biển | Vùng A: Kappa toàn khung | Vùng A: Kappa chỉ trong ROI | Vùng B: Kappa toàn khung |
+| -------------------- | ------------------------ | --------------------------- | ------------------------ |
+| Không giới hạn       | 0,593                    | 0,593                       | 0,370                    |
+| ≤ 3 km               | 0,360                    | 0,724                       | 0,509                    |
+| ≤ 5 km               | 0,475                    | 0,656                       | 0,527                    |
+| ≤ 8 km               | 0,573                    | 0,608                       | 0,456                    |
+
+"Kappa toàn khung" coi rừng GMW nằm ngoài ROI là bị bỏ sót. "Kappa chỉ trong ROI" chỉ tính trong vùng phương pháp được áp dụng, giống cách code Python của repo đánh giá (AOI = dải ven biển). Hai cách đều đúng, nhưng phải nói rõ khi báo cáo.
+
+**Cách chọn khoảng cách:**
+
+1. Chạy script, bật lớp **Vùng lọc (ROI)** trên nền ảnh vệ tinh và kiểm tra bằng mắt: ROI có phủ hết dải rừng thật không? Có lấn vào ruộng, vườn không?
+2. Xem dòng **Rừng GMW nằm ngoài ROI (ha)** ở Console. Con số lớn nghĩa là ROI đang loại cả rừng thật, hãy tăng `MAX_DIST_SEA_KM` (Đất Mũi có rừng quốc gia nên có thể cần 8 km) hoặc vẽ tay `ROI_POLYGON`.
+3. Với vùng chỉ có dải rừng hẹp ven biển, `ROI_POLYGON` vẽ tay bám sát dải rừng luôn tốt hơn khoảng cách cố định.
+
+> Khoảng cách tới biển chỉ là ước lượng thô, dựa vào ranh giới nước của JRC. Mục đích là loại bỏ vùng đất liền sâu, không phải xác định chính xác ranh giới rừng.
+
 
 ---
 
@@ -473,7 +544,7 @@ bienDong = bienDong.updateMask(bienDong.gt(0));
 Map.addLayer(
   bienDong,
   { min: 1, max: 3, palette: ["1a9850", "c51b8a", "ffd92f"] },
-  "Biến động rừng ngập mặn",
+  "Biến động rừng ngập mặn"
 );
 ```
 
@@ -528,7 +599,7 @@ print(
     .setOptions({
       title: "Diện tích rừng ngập mặn (ha)",
       legend: { position: "none" },
-    }),
+    })
 );
 ```
 
@@ -579,245 +650,31 @@ Sản phẩm cần có sau mục này:
 - [ ] Bảng độ chính xác: Overall Accuracy, Producer's / User's Accuracy, Kappa
 - [ ] File GeoTIFF xuất ra Google Drive
 
+Toàn bộ do một file làm ra: [gee_code_editor/bien_dong_rnm_dat_mui.js](../gee_code_editor/bien_dong_rnm_dat_mui.js).
+
 ### 6.2 Script hoàn chỉnh
 
-Tạo script mới, dán toàn bộ, bấm **Run**. Chỉ cần sửa khối tham số ở đầu file.
+Script hoàn chỉnh nằm trong một file riêng, đã kiểm tra cú pháp: [gee_code_editor/bien_dong_rnm_dat_mui.js](../gee_code_editor/bien_dong_rnm_dat_mui.js).
 
-```javascript
-// =====================================================================
-//  BIẾN ĐỘNG RỪNG NGẬP MẶN – VÙNG MẪU ĐẤT MŨI (CÀ MAU)
-//  Port đơn giản hoá từ pipeline Python GEN02-GEN04 + MAP03 + MAP05
-// =====================================================================
+1. Mở file trong VS Code, chọn hết (Ctrl+A), sao chép (Ctrl+C).
+2. Trong Code Editor: **Scripts → NEW → File**, đặt tên, dán vào khung code.
+3. Bấm **Run**. Chỉ cần sửa khối `0. THAM SỐ` ở đầu file (AOI, hai năm, ngưỡng NDVI, công tắc mặt nạ mây).
 
-// ---------- 0. THAM SỐ (chỉ sửa phần này) ----------
-var AOI = ee.Geometry.Rectangle([104.72, 8.56, 104.92, 8.74]); // [Tây, Nam, Đông, Bắc]
-var YEAR_A = 2020; // năm đầu (nên ≤ 2020 để kiểm chứng với GMW)
-var YEAR_B = 2025; // năm sau
-var USE_SCL_MASK = false; // true: nới mây 60% + loại mây theo điểm ảnh (Sentinel-2)
+File gồm 9 phần, khớp với các mục 3–6 của hướng dẫn:
 
-// Cấu hình mỗi cảm biến: giống GEN03 / GEN04 của repo
-var L8 = {
-  sensor: "L8",
-  id: "LANDSAT/LC08/C02/T1_L2",
-  cloudProp: "CLOUD_COVER",
-  cloudMax: 30,
-  nir: "SR_B5",
-  red: "SR_B4",
-  thr: 0.1,
-};
-var S2 = {
-  sensor: "S2",
-  id: "COPERNICUS/S2_SR_HARMONIZED",
-  cloudProp: "CLOUDY_PIXEL_PERCENTAGE",
-  cloudMax: 20,
-  nir: "B8",
-  red: "B4",
-  thr: 0.25,
-};
-var CFG = { 2015: L8, 2020: S2, 2025: S2 }; // muốn năm khác: thêm dòng, chọn L8 hoặc S2
+| Phần | Nội dung                                                   | Mục hướng dẫn |
+| ---- | ---------------------------------------------------------- | ------------- |
+| 0    | Tham số (gồm ROI: `ROI_POLYGON`, `MAX_DIST_SEA_KM`)         | 4.5, 6.1      |
+| 1    | Hàm: ROI, mặt nạ mây, ảnh ghép + NDVI, diện tích, độ chính xác | 3, 4, 5   |
+| 2–3  | Mặt nạ rừng 2 năm, phát hiện mất / mới / ổn định           | 4, 5.1        |
+| 4    | Bản đồ 3 lớp + chú giải                                    | 5.1, 5.6      |
+| 5    | Bảng diện tích + biểu đồ                                   | 5.2, 5.4      |
+| 6    | Độ chính xác so với GMW                                    | 6.3           |
+| 7    | Quét ngưỡng NDVI (tuỳ chọn, `RUN_SWEEP = true`)            | 6.4           |
+| 8    | Điểm tham chiếu tự chọn (tuỳ chọn, bỏ dấu chú thích)       | 6.5           |
+| 9    | Xuất GeoTIFF và CSV ra Google Drive                        | 6.2           |
 
-// ---------- 1. HÀM ----------
-function maskS2(img) {
-  var scl = img.select("SCL");
-  var bad = scl.eq(1).or(scl.eq(3)).or(scl.eq(8)).or(scl.eq(9)).or(scl.eq(10));
-  return img.updateMask(bad.not());
-}
-
-// Ảnh ghép + NDVI + mặt nạ rừng cho 1 năm
-function buildYear(year) {
-  var c = CFG[year];
-  var cloudMax = c.sensor === "S2" && USE_SCL_MASK ? 60 : c.cloudMax;
-  var col = ee
-    .ImageCollection(c.id)
-    .filterBounds(AOI)
-    .filterDate(year + "-01-01", year + 1 + "-01-01")
-    .filter(ee.Filter.lt(c.cloudProp, cloudMax));
-  if (c.sensor === "S2" && USE_SCL_MASK) {
-    col = col.map(maskS2);
-  }
-  print("Số cảnh " + year + " (" + c.sensor + "):", col.size()); // KIỂM TRA: quá ít cảnh = kém tin cậy
-  var img = col.median().clip(AOI);
-  var ndvi = img.normalizedDifference([c.nir, c.red]).rename("NDVI");
-  return {
-    img: img,
-    ndvi: ndvi,
-    mask: ndvi.gt(c.thr).rename("mangrove"),
-    cfg: c,
-  };
-}
-
-function rgbVis(sensor) {
-  return sensor === "S2"
-    ? { bands: ["B4", "B3", "B2"], min: 0, max: 3000 }
-    : { bands: ["SR_B4", "SR_B3", "SR_B2"], min: 7000, max: 16000 };
-}
-
-function areaHa(binary) {
-  var tong = binary.multiply(ee.Image.pixelArea()).reduceRegion({
-    reducer: ee.Reducer.sum(),
-    geometry: AOI,
-    scale: 30,
-    maxPixels: 1e13,
-    bestEffort: true,
-  });
-  return ee.Number(tong.values().get(0)).divide(10000);
-}
-
-// Độ chính xác của mặt nạ `pred` so với mặt nạ tham chiếu `ref` (cả hai là 0/1)
-function accuracy(pred, ref) {
-  var combo = pred.toInt().multiply(2).add(ref.toInt()).rename("combo");
-  var hist = ee.Dictionary(
-    combo
-      .reduceRegion({
-        reducer: ee.Reducer.frequencyHistogram(),
-        geometry: AOI,
-        scale: 30,
-        maxPixels: 1e13,
-        bestEffort: true,
-      })
-      .get("combo"),
-  );
-  // combo: 0 = cả hai không rừng (TN) | 1 = chỉ tham chiếu có rừng (bỏ sót, FN)
-  //        2 = chỉ mình có rừng (thừa, FP) | 3 = cả hai có rừng (TP)
-  var tn = ee.Number(hist.get("0", 0)),
-    fn = ee.Number(hist.get("1", 0));
-  var fp = ee.Number(hist.get("2", 0)),
-    tp = ee.Number(hist.get("3", 0));
-  var total = tn.add(fn).add(fp).add(tp);
-  var oa = tp.add(tn).divide(total);
-  var pa = tp.divide(tp.add(fn)); // Producer's Accuracy
-  var ua = tp.divide(tp.add(fp)); // User's Accuracy
-  var pe = tp
-    .add(fp)
-    .multiply(tp.add(fn))
-    .add(fn.add(tn).multiply(fp.add(tn)))
-    .divide(total.multiply(total));
-  var kappa = oa.subtract(pe).divide(ee.Number(1).subtract(pe));
-  return ee.Dictionary({
-    OverallAccuracy: oa.format("%.3f"),
-    ProducerAccuracy: pa.format("%.3f"),
-    UserAccuracy: ua.format("%.3f"),
-    Kappa: kappa.format("%.3f"),
-  });
-}
-
-// ---------- 2. TẠO MẶT NẠ RỪNG 2 NĂM ----------
-var A = buildYear(YEAR_A);
-var B = buildYear(YEAR_B);
-var maskA = A.mask,
-  maskB = B.mask;
-
-// ---------- 3. PHÁT HIỆN BIẾN ĐỘNG ----------
-var loss = maskA.and(maskB.not());
-var gain = maskB.and(maskA.not());
-var stable = maskA.and(maskB);
-var bienDong = ee
-  .Image(0)
-  .where(stable, 1)
-  .where(loss, 2)
-  .where(gain, 3)
-  .rename("change");
-bienDong = bienDong.updateMask(bienDong.gt(0));
-
-// ---------- 4. HIỂN THỊ ----------
-Map.setOptions("SATELLITE");
-Map.centerObject(AOI, 11);
-Map.addLayer(A.img, rgbVis(A.cfg.sensor), "Ảnh " + YEAR_A, false);
-Map.addLayer(B.img, rgbVis(B.cfg.sensor), "Ảnh " + YEAR_B, false);
-Map.addLayer(
-  maskA.updateMask(maskA),
-  { palette: ["1a9850"] },
-  "Rừng " + YEAR_A,
-  false,
-);
-Map.addLayer(
-  maskB.updateMask(maskB),
-  { palette: ["1a9850"] },
-  "Rừng " + YEAR_B,
-  false,
-);
-Map.addLayer(
-  bienDong,
-  { min: 1, max: 3, palette: ["1a9850", "c51b8a", "ffd92f"] },
-  "BIẾN ĐỘNG " + YEAR_A + "-" + YEAR_B,
-);
-
-// Chú giải
-function hangChuGiai(mau, chu) {
-  var o = ui.Label("", {
-    backgroundColor: mau,
-    padding: "8px",
-    margin: "0 6px 4px 0",
-  });
-  var t = ui.Label(chu, { margin: "0 0 4px 0", fontSize: "12px" });
-  return ui.Panel([o, t], ui.Panel.Layout.Flow("horizontal"));
-}
-var chuGiai = ui.Panel({
-  style: { position: "bottom-right", padding: "8px 12px" },
-});
-chuGiai.add(
-  ui.Label("Biến động RNM " + YEAR_A + "-" + YEAR_B, { fontWeight: "bold" }),
-);
-chuGiai.add(hangChuGiai("#1a9850", "Ổn định"));
-chuGiai.add(hangChuGiai("#c51b8a", "Mất rừng"));
-chuGiai.add(hangChuGiai("#ffd92f", "Rừng mới"));
-Map.add(chuGiai);
-
-// ---------- 5. BẢNG DIỆN TÍCH ----------
-var lossHa = areaHa(loss),
-  gainHa = areaHa(gain);
-var bang = ee.FeatureCollection([
-  ee.Feature(null, { nhan: "Rừng " + YEAR_A, ha: areaHa(maskA) }),
-  ee.Feature(null, { nhan: "Rừng " + YEAR_B, ha: areaHa(maskB) }),
-  ee.Feature(null, { nhan: "Mất", ha: lossHa }),
-  ee.Feature(null, { nhan: "Mới", ha: gainHa }),
-  ee.Feature(null, { nhan: "Ròng (mới - mất)", ha: gainHa.subtract(lossHa) }),
-]);
-print("BẢNG DIỆN TÍCH (ha)", bang);
-print(
-  ui.Chart.feature
-    .byFeature(bang, "nhan", "ha")
-    .setChartType("ColumnChart")
-    .setOptions({
-      title: "Diện tích rừng ngập mặn (ha)",
-      legend: { position: "none" },
-    }),
-);
-
-// ---------- 6. ĐỘ CHÍNH XÁC (a): SO VỚI GLOBAL MANGROVE WATCH ----------
-// GMW v3 chỉ có 1996, 2007-2010, 2015-2020: chỉ kiểm chứng được YEAR_A khi YEAR_A nằm trong đó
-var GMW = ee.ImageCollection("projects/sat-io/open-datasets/GMW/extent/GMW_V3");
-var gmwA = GMW.filter(ee.Filter.eq("id_no", "gmw_v3_" + YEAR_A))
-  .first()
-  .select("b1")
-  .unmask(0)
-  .gt(0)
-  .rename("gmw")
-  .clip(AOI);
-print("ĐỘ CHÍNH XÁC " + YEAR_A + " so với GMW", accuracy(maskA, gmwA));
-print("Diện tích rừng theo GMW " + YEAR_A + " (ha):", areaHa(gmwA));
-Map.addLayer(
-  gmwA.updateMask(gmwA),
-  { palette: ["ff7f00"] },
-  "GMW " + YEAR_A + " (tham chiếu)",
-  false,
-);
-
-// ---------- 7. XUẤT KẾT QUẢ RA GOOGLE DRIVE ----------
-Export.image.toDrive({
-  image: bienDong.unmask(0).toByte(), // 0 = không rừng, 1 = ổn định, 2 = mất, 3 = mới
-  description: "RNM_bien_dong_" + YEAR_A + "_" + YEAR_B,
-  region: AOI,
-  scale: 30,
-  crs: "EPSG:4326",
-  maxPixels: 1e13,
-});
-Export.table.toDrive({
-  collection: bang,
-  description: "RNM_bang_dien_tich_" + YEAR_A + "_" + YEAR_B,
-  fileFormat: "CSV",
-});
-```
+> **Lưu ý khi dán code:** nếu VS Code tự định dạng file bằng Prettier, hãy dùng file `.prettierrc` ở gốc repo (đã có). Cấu hình mặc định của Prettier 3 thêm dấu phẩy thừa sau tham số cuối của lời gọi hàm (dạng `Map.addLayer(a, b, "tên",` rồi xuống dòng `);`), và Code Editor không chấp nhận cú pháp đó.
 
 Sau khi bấm **Run**:
 
@@ -828,39 +685,47 @@ Sau khi bấm **Run**:
 
 ### 6.3 Số liệu tham chiếu để bạn đối chiếu
 
-Kết quả khi tôi chạy cùng logic này bằng Python API ngày 21/09/2026 (dữ liệu GEE có thể được cập nhật nên số của bạn có thể lệch nhẹ; nếu lệch nhiều là dấu hiệu đã làm khác đi):
+Kết quả khi tôi chạy cùng logic với cấu hình mặc định của file (`USE_SCL_MASK = true`, ngưỡng 0,25, `MAX_DIST_SEA_KM = 5`) bằng Python API ngày 21/09/2026. Dữ liệu GEE có thể được cập nhật nên số của bạn có thể lệch nhẹ; nếu lệch nhiều là dấu hiệu bạn đã làm khác đi.
 
-| Chỉ tiêu                | 2015 (Landsat 8) | 2020 (Sentinel-2) | 2025 (Sentinel-2) |
-| ----------------------- | ---------------- | ----------------- | ----------------- |
-| Số cảnh trong ảnh ghép  | 24               | 16                | 4                 |
-| Diện tích "rừng" (ha)   | 27.399           | 25.119            | 23.051            |
-| Diện tích theo GMW (ha) | 23.111           | 22.862            | không có          |
+| Chỉ tiêu                             | 2020   | 2025   |
+| ------------------------------------ | ------ | ------ |
+| Số cảnh trong ảnh ghép               | 33     | 29     |
+| Diện tích rừng trong ROI (ha)        | 18.610 | 18.640 |
 
-Biến động 2020 → 2025: mất **4.329 ha**, mới **2.260 ha**, ròng **−2.069 ha** (khoảng −8%).
+ROI rộng 34.909 ha. Rừng GMW 2020 nằm trong ROI: 17.270 ha, nằm ngoài ROI: 5.595 ha.
 
-Độ chính xác so với GMW (so từng điểm ảnh 30 m trong AOI):
+Biến động 2020 → 2025 trong ROI: ổn định **16.969 ha**, mất **1.641 ha**, mới **1.672 ha**, ròng **+31 ha** (gần như không đổi).
 
-| Năm  | Overall Accuracy | Producer's | User's | Kappa |
-| ---- | ---------------- | ---------- | ------ | ----- |
-| 2015 | 0,831            | 0,933      | 0,787  | 0,658 |
-| 2020 | 0,798            | 0,857      | 0,778  | 0,594 |
+Độ chính xác năm 2020 so với GMW, chỉ tính trong ROI (điểm ảnh 30 m):
 
-Cách đọc: Kappa 0,59–0,66 nghĩa là mức đồng thuận **trung bình đến khá**. Phương pháp tìm được phần lớn rừng theo GMW (Producer's 0,86–0,93) nhưng "thừa" khoảng 22% (User's ~0,78), chủ yếu vì NDVI cũng bắt cả thực vật không phải rừng ngập mặn.
+| Overall Accuracy | Producer's | User's | Kappa |
+| ---------------- | ---------- | ------ | ----- |
+| 0,828            | 0,865      | 0,803  | 0,656 |
 
-**Bài học từ việc chọn AOI:** khi tôi thử một khung rộng hơn, đi sâu vào vùng nuôi trồng thuỷ sản và lúa phía Đông Bắc (`[104.80, 8.70, 105.02, 8.86]`), Kappa 2020 tụt xuống còn **0,36** và User's chỉ **0,48** (một nửa "rừng" tìm được không phải rừng theo GMW). Cùng thuật toán, chỉ đổi AOI, độ chính xác thay đổi rất nhiều. Nếu số liệu của bạn kém xa bảng trên, hãy nghi ngờ AOI trước.
+Cách đọc: Kappa 0,66 nghĩa là mức đồng thuận **khá**. User's 0,80 nghĩa là khoảng 20% "rừng" tìm được không phải rừng theo GMW. Phần "thừa" còn lại có thể đến từ bờ đê có cây, rừng trồng xen kẽ ao tôm (chỉ số quang phổ không tách được), và cả sai số của chính GMW.
+
+**So sánh cùng dữ liệu khi không dùng ROI** (`MAX_DIST_SEA_KM = 0`): Kappa 0,593; mất 2.932 ha; mới 2.448 ha; ròng −484 ha. Phần biến động bị loại nằm ở ngoài ROI (đất liền cách biển hơn 5 km); nhiều khả năng do cây trồng thay đổi theo mùa vụ, nhưng tôi chưa kiểm chứng trực tiếp trên ảnh.
+
+Ba bài học từ thử nghiệm:
+
+- **Giới hạn không gian:** xem mục 4.5. Cùng thuật toán, chỉ đổi cách giới hạn vùng, Kappa ở khung nhiều đất liền (vùng B) tăng từ 0,37 lên 0,53.
+- **Mây:** kết quả biến động phụ thuộc mạnh vào việc loại mây (bảng ở mục 3.5). Độ chính xác 2020 gần như không đổi giữa hai cách loại mây (Kappa 0,594 và 0,593), nhưng số liệu biến động thì khác nhiều.
+- Vì vậy, **độ chính xác của một năm không đủ để tin vào bản đồ biến động giữa hai năm**. Hãy kiểm tra thêm bằng điểm tham chiếu tự chọn (mục 6.5).
 
 ### 6.4 Độ chính xác (b): quét ngưỡng NDVI
 
-Thêm vào cuối script để xem ngưỡng nào phù hợp nhất với vùng của bạn (giống `_threshold_sweep.csv`). Dùng ảnh NDVI của năm A:
+Đặt `RUN_SWEEP = true` ở đầu script rồi Run lại. Script in độ chính xác của năm A với các ngưỡng 0,10–0,35 (giống `_threshold_sweep.csv` của repo). Kết quả tham chiếu dưới đây tính **khi không dùng ROI** (`MAX_DIST_SEA_KM = 0`), 2020, Sentinel-2, so với GMW. Tôi chưa chạy lại phép quét ngưỡng với ROI, nên hãy bật `RUN_SWEEP = true` với cấu hình của bạn để có bảng đúng cho vùng của mình:
 
-```javascript
-// ---------- 8. QUÉT NGƯỠNG NDVI (so với GMW năm A) ----------
-[0.1, 0.15, 0.2, 0.25, 0.3, 0.35].forEach(function (t) {
-  print("NDVI > " + t, accuracy(A.ndvi.gt(t), gmwA));
-});
-```
+| Ngưỡng NDVI | Overall | Producer's | User's | Kappa |
+| ----------- | ------- | ---------- | ------ | ----- |
+| 0,10        | 0,819   | 0,943      | 0,765  | 0,634 |
+| 0,15        | 0,814   | 0,919      | 0,769  | 0,624 |
+| 0,20        | 0,807   | 0,891      | 0,774  | 0,611 |
+| **0,25**    | 0,798   | 0,858      | 0,778  | 0,593 |
+| 0,30        | 0,787   | 0,821      | 0,782  | 0,573 |
+| 0,35        | 0,775   | 0,780      | 0,786  | 0,548 |
 
-Chọn ngưỡng có **Kappa cao nhất** và User's Accuracy chấp nhận được. Trong thử nghiệm ở vùng mẫu, năm 2020 với Sentinel-2: ngưỡng 0,25 cho Kappa 0,594; nâng lên 0,35 hạ xuống 0,549. Tức ngưỡng 0,25 của repo vẫn hợp lý cho vùng này. Nếu bạn đổi ngưỡng cho năm A, **phải áp dụng cùng ngưỡng cho năm B** cùng cảm biến, nếu không phép so sánh không còn ý nghĩa.
+Ở vùng này, Kappa giảm nhẹ khi tăng ngưỡng còn User's tăng nhẹ (thừa ít hơn, bỏ sót nhiều hơn). Chênh lệch giữa các ngưỡng không lớn, nên ngưỡng 0,25 của repo là hợp lý và giữ được tính nhất quán với bản đồ toàn ĐBSCL. Nếu bạn đổi ngưỡng cho năm A, **phải áp dụng cùng ngưỡng cho năm B**, nếu không phép so sánh không còn ý nghĩa.
 
 ### 6.5 Độ chính xác (c): điểm tham chiếu tự chọn (đặc biệt cho năm 2025)
 
@@ -873,7 +738,7 @@ GMW không có 2025, nên năm này cần tự lập điểm tham chiếu. Cách
    - **Import as:** `FeatureCollection`
    - **Add property:** tên `ref`, giá trị `1`
 4. Lặp lại cho các nơi **không phải rừng ngập mặn** (nước, bãi bùn, ao tôm, đất trống, rừng tràm, lúa…): layer `otherPts`, thuộc tính `ref = 0`, ít nhất 50 điểm.
-5. Thêm khối sau (bỏ dấu `/*` và `*/` sau khi đã tạo 2 layer):
+5. Trong file script, ở phần `8.`, bỏ dấu `/*` và `*/` sau khi đã tạo 2 layer. Nội dung khối đó:
 
 ```javascript
 /*
@@ -902,15 +767,16 @@ Lưu ý khi tự lập điểm tham chiếu:
 
 Trước khi coi là xong:
 
-- [ ] Số cảnh hai năm không chênh nhau quá nhiều (hoặc đã bật `USE_SCL_MASK` và thử lại)
+- [ ] Ảnh màu thật của cả hai năm không còn mảng mây lớn (bật lớp `Ảnh 2020`, `Ảnh 2025` để xem) và số cảnh hai năm không chênh nhau quá nhiều
 - [ ] Bản đồ trông hợp lý so với ảnh nền (rừng ven biển được tô, biển và ao không bị tô)
+- [ ] Đã bật lớp `Vùng lọc (ROI)`, kiểm tra ROI phủ hết dải rừng và không lấn vào ruộng / vườn; đã xem số `Rừng GMW nằm ngoài ROI`
 - [ ] Đã có Overall Accuracy và Kappa (ít nhất so với GMW)
 - [ ] Đã thử đổi ngưỡng / bật mặt nạ mây và xu hướng không đổi chiều (mục 5.5)
 - [ ] Đã xuất GeoTIFF và CSV
 
 Khi ghi vào báo cáo, nên nêu rõ:
 
-> Bản đồ biến động rừng ngập mặn 2020–2025 vùng Đất Mũi được suy ra từ ngưỡng NDVI (0,25) của ảnh ghép median cả năm Sentinel-2. Độ chính xác so với Global Mangrove Watch năm 2020: OA = 0,80; Kappa = 0,59. Bộ dữ liệu GMW không có năm 2025 nên kết quả 2025 chưa được kiểm chứng trực tiếp; số cảnh ảnh của năm 2025 ít nên kết quả biến động có độ bất định đáng kể.
+> Bản đồ biến động rừng ngập mặn 2020–2025 vùng Đất Mũi được suy ra từ ngưỡng NDVI (0,25) của ảnh ghép median cả năm Sentinel-2 đã loại mây theo điểm ảnh (band SCL), giới hạn trong dải cách biển không quá 5 km để hạn chế lẫn với cây trồng. Độ chính xác so với Global Mangrove Watch năm 2020 trong vùng này: OA = 0,83; Kappa = 0,66. GMW không có năm 2025 nên kết quả 2025 chưa được kiểm chứng trực tiếp. Diện tích rừng gần như không đổi (ròng +31 ha), trong khi mất và mới đều khoảng 1.650 ha, mức thay đổi thuần thấp hơn sai số phân loại nên cần đọc thận trọng.
 
 ### 6.7 Mở rộng ra toàn ĐBSCL
 
