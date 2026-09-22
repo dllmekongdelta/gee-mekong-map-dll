@@ -1,4 +1,4 @@
-# Đề cương 12 tuần: Bản đồ biến động rừng ngập mặn vùng ven biển Đồng bằng sông Cửu Long bằng Google Earth Engine
+# Đề cương 12 tuần: Bản đồ biến động rừng ngập mặn vùng Đồng bằng sông Cửu Long bằng Google Earth Engine
 
 **Dùng cho:** người hướng dẫn kèm một bạn chưa biết gì về GEE / viễn thám, làm việc bán thời gian (khoảng 12–15 giờ mỗi tuần), hoàn thành trong 12 tuần.
 **Tài liệu đi kèm trong repo:**
@@ -12,7 +12,7 @@
 
 ## 1. Thông tin đề tài
 
-**Tên đề tài:** Đánh giá biến động rừng ngập mặn vùng ven biển Đồng bằng sông Cửu Long (109 xã) giai đoạn 2020–2025 bằng ảnh Sentinel-2 trên Google Earth Engine.
+**Tên đề tài:** Đánh giá biến động rừng ngập mặn vùng Đồng bằng sông Cửu Long (5 tỉnh/thành theo ranh giới hành chính mới: Đồng Tháp, An Giang, Vĩnh Long, Cần Thơ, Cà Mau) giai đoạn 1988–nay, bằng ảnh Landsat/Sentinel-2 trên Google Earth Engine.
 
 **Câu hỏi nghiên cứu:**
 1. Diện tích rừng ngập mặn toàn vùng, và theo từng tỉnh, biến động thế nào qua từng giai đoạn từ 1988 đến nay — có giai đoạn nào bất thường so với lịch sử (z-score, xem Hướng dẫn mục 5.4)?
@@ -96,7 +96,7 @@ NHÁNH A (nền, tuần 2–4)                        NHÁNH B (chính, tuần 5
 - **Mẫu gán nhãn cho cả hai năm tại cùng các điểm**, để vừa huấn luyện, vừa kiểm tra độ chính xác của lớp biến động.
 - **Tách mẫu huấn luyện / kiểm tra theo khối không gian** (lưới 10 × 10 km), không tách ngẫu nhiên từng điểm, vì điểm gần nhau giống nhau và làm độ chính xác bị thổi phồng.
 - **Chỉnh tham số bằng sai số out-of-bag của Random Forest**, không dùng tập kiểm tra để chỉnh.
-- **Thống kê theo xã** dùng ranh giới 109 xã (giống phần 3 của `MAP05_Validation_RecentChange.ipynb` trong repo).
+- **Thống kê theo tỉnh** dùng ranh giới 5 tỉnh (`shapefile_dbscl`); **thống kê theo xã** (chi tiết hơn, chỉ phủ dải ven biển) dùng ranh giới 109 xã — giống phần 3 của `MAP05_Validation_RecentChange.ipynb` trong repo.
 
 ---
 
@@ -130,7 +130,7 @@ du_an/
 2. Thư mục repo, chia sẻ quyền truy cập, tạo cấu trúc thư mục ở trên.
 3. Tải `shapefile_dbscl/DBSCL_5Tinh_2025.shp` (5 tỉnh, AOI chính) và `shapefile_commune/VungNghiencuu.*` (109 xã, tuỳ chọn) lên GEE Assets của người thực hiện (hoặc chia sẻ asset của bạn).
 4. Ba công cụ mà **repo hiện chưa có** (cần cho tuần 3, 5, 7). Hướng dẫn Mục 7 đã có code mẫu cho cách chọn điểm (7.2, 7.3) và tách khối (7.4) ở quy mô vùng tập — mentor cần mở rộng, không phải viết từ đầu. Nếu cần, nhờ tôi viết:
-   - Script nền chạy toàn vùng: nhận ranh giới 109 xã làm AOI, có mặt nạ mây SCL, lựa chọn vùng lọc, thống kê theo tỉnh và xã, và chia nhỏ để không quá tải (mở rộng từ `bien_dong_rnm_dat_mui.js`, phần "Mở rộng ra toàn ĐBSCL" ở Hướng dẫn mục 6.7).
+   - Script nền chạy toàn vùng: nhận ranh giới **5 tỉnh** (`shapefile_dbscl`) làm AOI, đa giác dải ven biển hoặc `MAX_DIST_SEA_KM` làm ROI bên trong, có mặt nạ mây SCL, thống kê theo tỉnh (và theo xã ven biển nếu cần chi tiết hơn), và chia nhỏ để không quá tải (mở rộng từ `bien_dong_rnm_dat_mui.js`, phần "Mở rộng ra toàn ĐBSCL" ở Hướng dẫn mục 6.7).
    - Script sinh điểm ngẫu nhiên phân tầng theo bản đồ nền **và theo tỉnh** (mở rộng `stratifiedSample` ở Hướng dẫn mục 7.3, hiện chỉ phân tầng theo vùng biến động, chưa theo tỉnh).
    - Script mẫu Random Forest đã sửa các lỗi thường gặp (chồng lấn tập, band nhiễu, `scale` sai), nhận mẫu theo cách thu thập ở Hướng dẫn Mục 7, có xuất kết quả theo tỉnh.
 5. Chốt giờ họp cố định mỗi tuần (45 phút) và kênh hỏi nhanh.
@@ -194,7 +194,7 @@ Cách đọc mỗi tuần dưới đây (chi tiết hơn bảng tổng quan trê
 - Đọc Hướng dẫn **Mục 3**.
 - Trên vùng tập, tạo ảnh ghép median 2020 và 2025 theo **ba cách**: (a) không lọc, (b) lọc `CLOUDY_PIXEL_PERCENTAGE` < 20, (c) lọc < 60 và mặt nạ SCL.
 - In số cảnh của từng cách và từng năm, chụp ảnh màu thật để so sánh.
-- Thử chuyển cách (c) sang toàn vùng (dùng ranh giới 109 xã, tải lên Assets) và xem số cảnh; ghi lại thời gian chạy.
+- Thử chuyển cách (c) sang toàn vùng (dùng ranh giới **5 tỉnh**, `shapefile_dbscl`, tải lên Assets) và xem số cảnh; ghi lại thời gian chạy.
 - (Tuỳ chọn) làm ảnh ghép Landsat 8 cho 2015.
 
 **Nộp cuối tuần:** bảng số cảnh 3 cách × 2 năm; 6 ảnh so sánh; một đoạn 5–7 câu giải thích vì sao chọn cách (c).
@@ -212,7 +212,7 @@ Cách đọc mỗi tuần dưới đây (chi tiết hơn bảng tổng quan trê
 **Việc làm:**
 - Đọc Hướng dẫn **Mục 4** (NDVI, ngưỡng) và **Mục 5** (mất / mới / ổn định, áp dụng cho mỗi giai đoạn).
 - **Vùng tập (khoảng 2 ngày):** chạy [bien_dong_rnm_dat_mui.js](../gee_code_editor/bien_dong_rnm_dat_mui.js) nguyên bản — script này giờ chạy **cả 9 mốc năm (1988→nay)**, không chỉ 2 năm, và ra 8 bản đồ biến động (1 mỗi giai đoạn, dùng chung 1 chú giải 3 lớp) cùng bảng tốc độ ha/năm theo giai đoạn. Đọc từng phần, chú thích tiếng Việt vào file của mình. Tự viết lại phần "mất / mới / ổn định" của **1 giai đoạn** từ đầu (không nhìn file).
-- **Toàn vùng (khoảng 2 ngày, mentor chạy cùng):** đổi AOI sang 109 xã, chạy NDVI > 0,25 cho **năm 2020 duy nhất** (chưa cần chạy cả chuỗi ở quy mô này, tốn tài nguyên hơn nhiều). So diện tích với GMW 2020 và **ghi lại con số** (tham chiếu: khoảng 655.000 ha so với khoảng 101.000 ha, đo ở 100 m). Chụp ảnh những nơi "rừng" thực ra là ruộng hoặc vườn.
+- **Toàn vùng (khoảng 2 ngày, mentor chạy cùng):** đổi AOI sang **5 tỉnh** (`shapefile_dbscl`), chạy NDVI > 0,25 cho **năm 2020 duy nhất** (chưa cần chạy cả chuỗi ở quy mô này, tốn tài nguyên hơn nhiều). So diện tích với GMW 2020 và **ghi lại con số mới** (số cũ đo trên 109 xã là khoảng 655.000 ha so với khoảng 101.000 ha, đo ở 100 m — trên 5 tỉnh dự kiến lệch còn lớn hơn vì thêm cả Đồng Tháp/An Giang nội địa, cần đo lại). Chụp ảnh những nơi "rừng" thực ra là ruộng hoặc vườn.
 - Ghi lại thời gian chạy và các lỗi hạn mức, nếu có.
 
 **Nộp cuối tuần:** chuỗi 8 bản đồ nền vùng tập (1988→nay), bảng diện tích theo mốc và theo giai đoạn, script tự viết cho 1 giai đoạn, bảng "NDVI toàn vùng 2020 so với GMW" kèm ảnh minh hoạ ít nhất 3 nơi nhầm.
@@ -338,7 +338,7 @@ Cách đọc mỗi tuần dưới đây (chi tiết hơn bảng tổng quan trê
 **Việc làm:**
 - So sánh hai bản đồ phân loại (post-classification comparison): tạo ma trận 5 × 5 (diện tích chuyển từ lớp i sang lớp j), toàn vùng và theo tỉnh.
 - Rút ra bản đồ **rừng ổn định / mất / mới** và bản đồ **hướng chuyển đổi** của phần rừng mất.
-- Thống kê theo 109 xã (`reduceRegions`, giống phần 3 của MAP05): tốc độ biến động ròng (ha/năm) mỗi xã, xếp hạng điểm nóng.
+- Thống kê theo tỉnh (cả 5 tỉnh) và theo 109 xã ven biển (`reduceRegions`, giống phần 3 của MAP05 — xã chỉ phủ dải ven biển, không phải toàn bộ 5 tỉnh): tốc độ biến động ròng (ha/năm) mỗi đơn vị, xếp hạng điểm nóng.
 - **Kiểm tra độ bền:** chạy lại với (a) seed khác, (b) bỏ độ cao và độ dốc, (c) tắt mặt nạ SCL, (d) đổi vùng lọc của nhánh A. Xem kết luận (tăng hay giảm) có đổi chiều không.
 
 **Nộp cuối tuần:** ma trận chuyển đổi (CSV), bản đồ biến động cuối, bảng xã điểm nóng, bảng kiểm tra độ bền.
