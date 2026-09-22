@@ -12,7 +12,9 @@
 
 ## 1. Thông tin đề tài
 
-**Tên đề tài:** Đánh giá biến động rừng ngập mặn vùng Đồng bằng sông Cửu Long (5 tỉnh/thành theo ranh giới hành chính mới: Đồng Tháp, An Giang, Vĩnh Long, Cần Thơ, Cà Mau) giai đoạn 1988–nay, bằng ảnh Landsat/Sentinel-2 trên Google Earth Engine.
+**Tên đề tài:** Ứng dụng viễn thám phân tích biến động rừng ngập mặn tại Đồng bằng sông Cửu Long.
+
+**Tên đề tài đầy đủ (dùng nội bộ, cho biết rõ công cụ/phạm vi khi cần):** Đánh giá biến động rừng ngập mặn vùng Đồng bằng sông Cửu Long (5 tỉnh/thành theo ranh giới hành chính mới: Đồng Tháp, An Giang, Vĩnh Long, Cần Thơ, Cà Mau) giai đoạn 1988–nay, bằng ảnh Landsat/Sentinel-2 trên Google Earth Engine.
 
 **Câu hỏi nghiên cứu:**
 1. Diện tích rừng ngập mặn toàn vùng, và theo từng tỉnh, biến động thế nào qua từng giai đoạn từ 1988 đến nay — có giai đoạn nào bất thường so với lịch sử (z-score, xem Hướng dẫn mục 5.4)?
