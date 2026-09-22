@@ -1,29 +1,36 @@
 # Hướng dẫn làm bản đồ biến động rừng ngập mặn bằng Google Earth Engine (JavaScript)
 
 **Dành cho:** người chưa từng dùng Google Earth Engine (GEE), làm việc hoàn toàn trên trình duyệt (Code Editor), không cần cài Python.
-**Kết quả cuối:** 1 bản đồ biến động rừng ngập mặn (mất / mới / ổn định) cho một vùng nhỏ ở Đồng bằng sông Cửu Long (mũi Cà Mau), kèm bảng diện tích và bảng độ chính xác.
-**Thời gian:** khoảng 3–4 giờ nếu làm lần đầu.
-**Căn cứ:** quy trình Python của repo này (`GEN01`–`GEN04`, `MAP03`, `MAP05`) được viết lại bằng JavaScript. Script hoàn chỉnh cho vùng mẫu: [gee_code_editor/bien_dong_rnm_dat_mui.js](../gee_code_editor/bien_dong_rnm_dat_mui.js). Bản JavaScript đầy đủ cho toàn bộ ĐBSCL nằm ở [gee_code_editor/mangrove_analysis.js](../gee_code_editor/mangrove_analysis.js).
+**Kết quả cuối:** một chuỗi bản đồ biến động rừng ngập mặn qua các mốc năm **1988, 1992, 1997, 2001, 2005, 2010, 2015, 2020, nay** cho một vùng nhỏ ở Đồng bằng sông Cửu Long (mũi Cà Mau) — mỗi giai đoạn giữa hai mốc liên tiếp chỉ **1 bản đồ gộp 3 lớp** (ổn định / mất / mới), không phải 3 bản đồ tách rời (Coverage / Loss / Gain như 3 file HTML gốc của repo) — kèm bảng diện tích theo mốc năm, bảng tốc độ biến động theo giai đoạn, so sánh giai đoạn gần nhất với lịch sử, và bảng độ chính xác. Mục 7 (mở rộng) hướng dẫn thêm cách tự thu thập mẫu trên bản đồ, dùng khi muốn đi xa hơn ngưỡng NDVI (ví dụ phân loại có giám sát nhiều lớp, xem đề cương 12 tuần).
+**Thời gian:** khoảng 4–6 giờ cho Mục 1–6 nếu làm lần đầu (nhiều mốc năm hơn bản chỉ so 2 năm); Mục 7 tốn thêm nhiều giờ tuỳ số điểm mẫu cần thu thập.
+**Căn cứ:** quy trình Python của repo này (`GEN01`–`GEN04`, `MAP03`, `MAP05`) được viết lại bằng JavaScript. Script hoàn chỉnh cho vùng mẫu, chạy toàn bộ 9 mốc năm: [gee_code_editor/bien_dong_rnm_dat_mui.js](../gee_code_editor/bien_dong_rnm_dat_mui.js). Bản JavaScript đầy đủ cho toàn bộ ĐBSCL (cùng 9 mốc năm nhưng chưa có vùng lọc ROI, còn theo bảng màu Loss/Gain 9 sắc cũ) nằm ở [gee_code_editor/mangrove_analysis.js](../gee_code_editor/mangrove_analysis.js). Tài liệu này khớp với [docs/DE_CUONG_12_TUAN_BIEN_DONG_RNM.md](DE_CUONG_12_TUAN_BIEN_DONG_RNM.md) — Mục 1–6 ở đây là "nhánh A" (nền) của đề cương, Mục 7 phục vụ "nhánh B" (phân loại có giám sát) ở tuần 5 trở đi.
 
 ---
 
-## Lộ trình 6 mục
+## Lộ trình 6 mục (+ Mục 7 mở rộng)
 
 | #   | Mục                                              | Bạn làm được gì sau mục này                                                                  |
 | --- | ------------------------------------------------ | -------------------------------------------------------------------------------------------- |
 | 1   | Tìm hiểu GEE                                     | Đăng nhập Code Editor, hiểu các khái niệm cốt lõi, chạy được script đầu tiên                 |
 | 2   | Import và lấy dữ liệu liên quan                  | Tìm dataset, gọi ảnh Landsat / Sentinel-2 / GMW, vẽ vùng nghiên cứu (AOI), tải shapefile lên |
-| 3   | Tiền xử lý: lọc mây và ảnh ghép theo năm         | Có 1 ảnh sạch đại diện cho mỗi năm                                                           |
-| 4   | Tính NDVI và phân loại rừng ngập mặn             | Có mặt nạ rừng ngập mặn (0/1) cho mỗi năm, hiểu cách chọn ngưỡng                             |
-| 5   | Phát hiện biến động và tính diện tích            | Có lớp mất / mới / ổn định, bảng ha, biểu đồ, chú giải                                       |
-| 6   | Làm hoàn chỉnh vùng mẫu và đánh giá độ chính xác | Có sản phẩm cuối: bản đồ + bảng diện tích + Overall Accuracy / Kappa                         |
+| 3   | Tiền xử lý: lọc mây và ảnh ghép theo năm         | Có 1 ảnh sạch đại diện cho mỗi mốc năm                                                       |
+| 4   | Tính NDVI và phân loại rừng ngập mặn             | Có mặt nạ rừng ngập mặn (0/1) cho mỗi mốc năm, hiểu cách chọn ngưỡng                         |
+| 5   | Phát hiện biến động và tính diện tích            | Có 1 bản đồ gộp 3 lớp cho MỖI giai đoạn, bảng ha, tỷ lệ %, tốc độ ha/năm, so sánh giai đoạn  |
+| 6   | Làm hoàn chỉnh vùng mẫu và đánh giá độ chính xác | Có sản phẩm cuối: chuỗi bản đồ theo giai đoạn + các bảng trên + Overall Accuracy / Kappa     |
+| 7   | (Mở rộng) Thu thập mẫu trên bản đồ               | Biết cách tự tạo điểm mẫu (thủ công hoặc ngẫu nhiên phân tầng) để kiểm chứng hoặc huấn luyện |
 
 Luồng xử lý tổng quát:
 
 ```
-Vẽ AOI → Lấy ảnh vệ tinh theo năm → Lọc mây → Ảnh ghép median → Tính NDVI
-      → Ngưỡng NDVI = mặt nạ rừng → So 2 năm = mất / mới / ổn định
-      → Tính diện tích (ha) → Kiểm chứng (GMW + điểm tham chiếu) → Xuất bản đồ
+Vẽ AOI → Với MỖI mốc năm (1988...nay): lấy ảnh vệ tinh → lọc mây → ảnh ghép median
+       → tính NDVI → ngưỡng NDVI VÀ vùng lọc (ROI) = mặt nạ rừng của mốc đó
+      → Với MỖI giai đoạn (2 mốc liên tiếp): so 2 mặt nạ = 1 bản đồ gộp 3 lớp
+        (ổn định / mất / mới) -- không tách thành bản đồ Coverage/Loss/Gain riêng
+      → Tính diện tích, tỷ lệ %, tốc độ ha/năm mỗi giai đoạn → so giai đoạn gần
+        nhất với trung bình các giai đoạn lịch sử
+      → Kiểm chứng (GMW + điểm tham chiếu) → Xuất bản đồ
+      → (Mở rộng, Mục 7) Tự thu thập mẫu trên bản đồ → dùng cho kiểm chứng
+        2 lớp hoặc huấn luyện phân loại nhiều lớp
 ```
 
 ---
@@ -69,12 +76,13 @@ Hướng dẫn này dùng **Code Editor**.
 | ------------------------ | ------------------------------------------------------------------ |
 | **Scripts**              | Lưu / mở script (New → File). Bấm **Save** hay Ctrl+S thường xuyên |
 | **Docs**                 | Tra cứu hàm (gõ tên hàm, ví dụ `normalizedDifference`)             |
-| **Assets**               | Dữ liệu của bạn tải lên (shapefile, raster)                        |
+| **Assets**               | Dữ liệu của bạn tải lên (shapefile, raster, mẫu điểm)              |
 | **Thanh tìm kiếm**       | Tìm dataset trong Data Catalog, ví dụ gõ `Landsat 8 Level 2`       |
 | **Console**              | Nơi hiện kết quả của lệnh `print()` và thông báo lỗi (màu đỏ)      |
 | **Inspector**            | Bấm vào bản đồ để xem giá trị điểm ảnh ở từng lớp                  |
 | **Tasks**                | Nơi bấm **Run** để xuất file ra Google Drive (mục 5–6)             |
 | **Layers** (trên bản đồ) | Bật / tắt / chỉnh độ trong suốt từng lớp `Map.addLayer()`          |
+| **Geometry** (góc trên-trái bản đồ) | Vẽ điểm / đường / đa giác trực tiếp trên ảnh (dùng ở Mục 7) |
 
 ### 1.4 JavaScript tối thiểu bạn cần
 
@@ -111,11 +119,11 @@ Ghi chú khi đối chiếu với code Python trong repo:
 ### 1.5 Các khái niệm cốt lõi của GEE
 
 | Khái niệm                             | Hiểu đơn giản                                 | Ví dụ                 |
-| ------------------------------------- | --------------------------------------------- | --------------------- |
+| -------------------------------------- | --------------------------------------------- | --------------------- |
 | `ee.Image`                            | 1 ảnh, gồm nhiều **band** (kênh phổ)          | 1 cảnh Sentinel-2     |
 | `ee.ImageCollection`                  | Bộ sưu tập nhiều ảnh                          | Tất cả ảnh Landsat 8  |
 | `ee.Geometry`                         | Hình học: điểm, đường, đa giác                | Vùng nghiên cứu (AOI) |
-| `ee.Feature` / `ee.FeatureCollection` | Hình học kèm bảng thuộc tính                  | Ranh giới các xã      |
+| `ee.Feature` / `ee.FeatureCollection` | Hình học kèm bảng thuộc tính                  | Ranh giới các xã, điểm mẫu |
 | `ee.Reducer`                          | Phép gộp: tổng, trung bình, median, histogram | Tổng diện tích rừng   |
 | `scale`                               | Kích thước 1 điểm ảnh (mét) khi tính          | 30 m cho Landsat      |
 
@@ -507,25 +515,26 @@ ROI cố định theo thời gian (không đổi giữa hai năm), nên bản đ
 
 > Khoảng cách tới biển chỉ là ước lượng thô, dựa vào ranh giới nước của JRC. Mục đích là loại bỏ vùng đất liền sâu, không phải xác định chính xác ranh giới rừng.
 
-
 ---
 
 ## Mục 5. Phát hiện biến động và tính diện tích
 
-### 5.1 Logic: so sánh hai mặt nạ
+### 5.1 Logic: so sánh hai mặt nạ (áp dụng cho MỖI giai đoạn)
 
-Với mặt nạ năm đầu **A** và năm sau **B** (1 = rừng), mỗi điểm ảnh rơi vào 1 trong 4 trường hợp:
+Với mặt nạ mốc trước **A** và mốc sau **B** (1 = rừng), mỗi điểm ảnh rơi vào 1 trong 4 trường hợp:
 
 | A   | B   | Ý nghĩa                       | Phép tính (JS)           |
-| --- | --- | ----------------------------- | ------------------------ |
+| --- | --- | ------------------------------ | ------------------------ |
 | 1   | 0   | **Mất rừng** (loss)           | `maskA.and(maskB.not())` |
 | 0   | 1   | **Rừng mới** (gain)           | `maskB.and(maskA.not())` |
-| 1   | 1   | **Ổn định** (rừng cả hai năm) | `maskA.and(maskB)`       |
+| 1   | 1   | **Ổn định** (rừng cả hai mốc) | `maskA.and(maskB)`       |
 | 0   | 0   | Không phải rừng               | (bỏ qua)                 |
 
-Đây là đúng logic của [MAP01](../MAP01_Mangrove_LOSS.ipynb) và [MAP02](../MAP02_Mangrove_GAIN.ipynb) trong repo.
+Đây là đúng logic của [MAP01](../MAP01_Mangrove_LOSS.ipynb) và [MAP02](../MAP02_Mangrove_GAIN.ipynb) trong repo, áp dụng cho **mỗi cặp mốc năm liên tiếp**: với 9 mốc (1988, 1992, 1997, 2001, 2005, 2010, 2015, 2020, nay) thì có 8 giai đoạn, tức lặp lại đúng phép tính dưới đây 8 lần.
 
-> Các đoạn code ở mục 5 dùng biến `AOI`, `YEAR_A`, `YEAR_B`, `maskA`, `maskB` (mặt nạ rừng của hai năm, tạo theo mục 3–4). Chúng được ghép sẵn thành một script chạy được ở mục 6.2, bạn có thể đọc mục 5 để hiểu rồi chạy thẳng mục 6.
+> **Khác với repo Python gốc** (3 sản phẩm tách rời: `Mangrove_COVERAGE_map.html`, `Mangrove_LOSS_map.html`, `Mangrove_GAIN_map.html`, mỗi loại 1 bảng màu 9 sắc riêng cho 9 giai đoạn): ở đây mỗi giai đoạn chỉ có **1 bản đồ**, gộp mất và mới vào cùng 3 lớp. Vì luôn chỉ có 3 lớp (Ổn định / Mất / Mới) bất kể giai đoạn nào, **1 chú giải duy nhất dùng chung cho mọi giai đoạn** — không cần đổi màu theo giai đoạn như bảng ramp 9 sắc cũ.
+
+> Các đoạn code ở mục 5 dùng biến `AOI`, `maskA`, `maskB` (mặt nạ rừng của 2 mốc liên tiếp, tạo theo mục 3–4). Trong script hoàn chỉnh ở mục 6.2, các biến này được thay bằng một vòng lặp qua toàn bộ 8 giai đoạn; đọc mục 5 để hiểu logic của 1 giai đoạn, rồi xem mục 6 để biết cách lặp cho cả chuỗi.
 
 ```javascript
 var loss = maskA.and(maskB.not());
@@ -550,6 +559,8 @@ Map.addLayer(
 
 Màu chọn: xanh lá = ổn định, tím hồng = mất (cùng hệ màu tím của lớp LOSS trong repo), vàng = mới. Ba màu này nổi trên nền ảnh vệ tinh và phân biệt được nhau.
 
+**Lặp cho toàn bộ 8 giai đoạn:** thay vì viết tay 8 lần, script ở mục 6.2 dùng một vòng `for` chạy qua mảng các mốc năm đã tính mặt nạ, tạo ra 8 ảnh `bienDong` (1 cho mỗi giai đoạn) và thêm mỗi ảnh làm 1 lớp riêng trên bản đồ — chỉ giai đoạn gần nhất hiện sẵn, các giai đoạn khác tự bật ở khung Layers.
+
 ### 5.2 Tính diện tích (ha)
 
 `ee.Image.pixelArea()` cho diện tích mỗi điểm ảnh (m²). Nhân với mặt nạ rồi cộng lại:
@@ -566,54 +577,69 @@ function areaHa(binary) {
   return ee.Number(tong.values().get(0)).divide(10000); // m² → ha
 }
 
-print("Rừng năm A (ha):", areaHa(maskA));
+print("Rừng mốc A (ha):", areaHa(maskA));
 print("Mất rừng (ha):", areaHa(loss));
 print("Rừng mới (ha):", areaHa(gain));
 ```
 
-Vì sao `scale: 30`: đủ mịn cho Landsat, và dùng chung 30 m cho cả Sentinel-2 cho phép so sánh công bằng giữa các năm (giống `SCALE_M = 30` ở MAP05).
+Vì sao `scale: 30`: đủ mịn cho Landsat, và dùng chung 30 m cho cả Sentinel-2 cho phép so sánh công bằng giữa các mốc năm (giống `SCALE_M = 30` ở MAP05). Gọi hàm này cho **cả 9 mốc năm**, không chỉ 2 mốc, để có bảng diện tích đầy đủ (mục 6.2, phần 5 của script).
 
-### 5.3 Biến động ròng và tốc độ hằng năm
+### 5.3 Biến động ròng, tỷ lệ % và tốc độ hằng năm (để SO SÁNH giữa các giai đoạn)
+
+Một mình số ha "mất" hay "ròng" không nói lên giai đoạn nào biến động mạnh hơn: các giai đoạn dài khác nhau (4–6 năm) và diện tích rừng đầu kỳ khác nhau. Cần chuẩn hoá bằng hai cách:
 
 ```
-Ròng (ha)      = Gain − Loss
-Tốc độ (ha/năm) = Ròng / số năm giữa hai mốc
+Ròng (ha)         = Mới − Mất
+Tỷ lệ mất (%)     = Mất / Rừng đầu kỳ × 100
+Tỷ lệ mới (%)     = Mới / Rừng đầu kỳ × 100
+Tốc độ (ha/năm)   = Ròng / số năm giữa hai mốc
 ```
 
-Tốc độ theo năm giúp so sánh hai giai đoạn dài khác nhau (giống cột `annual_rate_ha_yr` trong MAP05).
+- **Tỷ lệ %** chuẩn hoá theo diện tích rừng ban đầu: mất 500 ha trên nền 15.000 ha (3,3%) đáng lo hơn nhiều so với mất 500 ha trên nền 100.000 ha (0,5%), dù cùng số ha.
+- **Tốc độ ha/năm** chuẩn hoá theo thời gian: giai đoạn 6 năm (2020 → nay) và giai đoạn 4 năm (2001-2005) không thể so trực tiếp số ròng, phải chia cho số năm (giống cột `annual_rate_ha_yr` trong MAP05).
 
-### 5.4 Biểu đồ nhanh
+Script ở mục 6.2 tính cả 3 chỉ số này cho **mỗi giai đoạn**, gộp vào 1 bảng để so sánh trực quan giai đoạn nào biến động mạnh nhất.
 
 ```javascript
 var bang = ee.FeatureCollection([
-  ee.Feature(null, { nhan: "Rừng " + YEAR_A, ha: areaHa(maskA) }),
-  ee.Feature(null, { nhan: "Rừng " + YEAR_B, ha: areaHa(maskB) }),
-  ee.Feature(null, { nhan: "Mất", ha: areaHa(loss) }),
-  ee.Feature(null, { nhan: "Mới", ha: areaHa(gain) }),
+  ee.Feature(null, {
+    giai_doan: "A-B",
+    mat_ha: areaHa(loss),
+    moi_ha: areaHa(gain),
+    ty_le_mat_pct: areaHa(loss).divide(areaHa(maskA)).multiply(100),
+    ty_le_moi_pct: areaHa(gain).divide(areaHa(maskA)).multiply(100),
+  }),
 ]);
 print(bang);
-print(
-  ui.Chart.feature
-    .byFeature(bang, "nhan", "ha")
-    .setChartType("ColumnChart")
-    .setOptions({
-      title: "Diện tích rừng ngập mặn (ha)",
-      legend: { position: "none" },
-    })
-);
 ```
 
-### 5.5 Kiểm tra độ bền của kết quả (đừng bỏ qua)
+### 5.4 So sánh nhiều giai đoạn: bảng biến động và z-score so với lịch sử
 
-Trước khi kết luận "rừng giảm X ha", tự hỏi:
+Sau khi có bảng biến động của cả 8 giai đoạn, câu hỏi tiếp theo là: **giai đoạn gần nhất có gì khác thường so với lịch sử?** Cách đơn giản (đơn giản hoá từ Phần 2 của `MAP05_Validation_RecentChange.ipynb`): so tốc độ ha/năm của giai đoạn gần nhất với **trung bình và độ lệch chuẩn** của tốc độ các giai đoạn trước đó.
 
-1. Hai ảnh ghép có **số cảnh** tương đương không (mục 3.3)?
-2. Đổi ngưỡng NDVI ±0,05 hoặc bật mặt nạ mây (mục 3.5), xu hướng (tăng / giảm) có **giữ nguyên** không?
+```javascript
+// rates = mảng tốc độ ha/năm của TỪNG giai đoạn, theo đúng thứ tự thời gian
+var historicalRates = ee.List(rates).slice(0, rates.length - 1); // bỏ giai đoạn cuối
+var recentRate = ee.List(rates).get(rates.length - 1); // giai đoạn cuối = gần nhất
+
+var histMean = ee.Number(historicalRates.reduce(ee.Reducer.mean()));
+var histStd = ee.Number(ee.List(historicalRates).reduce(ee.Reducer.stdDev()));
+var zScore = ee.Number(recentRate).subtract(histMean).divide(histStd);
+```
+
+Đọc `zScore`: |z| ≥ 2 nghĩa là tốc độ gần đây lệch khá xa so với biến thiên lịch sử, đáng nêu trong báo cáo; |z| < 2 nghĩa là còn trong biên độ dao động bình thường. Với chỉ 7 giai đoạn lịch sử làm mẫu (như ở vùng tập), đây là chỉ số **mô tả/khám phá**, không phải kiểm định giả thuyết chặt chẽ — đúng như cách MAP05 tự giới hạn kết luận của nó.
+
+### 5.5 Kiểm tra độ bền của kết quả (đừng bỏ qua, cho MỖI giai đoạn)
+
+Trước khi kết luận "giai đoạn X mất Y ha", tự hỏi:
+
+1. Hai ảnh ghép của giai đoạn đó có **số cảnh** tương đương không (mục 3.3)? Các mốc Landsat cũ (1988–2010) thường có ít cảnh hơn Sentinel-2 nhiều.
+2. Đổi ngưỡng NDVI ±0,05 hoặc bật mặt nạ mây (mục 3.5), xu hướng (tăng / giảm) của giai đoạn đó có **giữ nguyên** không?
 3. Chênh lệch ròng có **lớn hơn** mức dao động do 1 và 2 gây ra không?
 
-Nếu không, kết luận chỉ là "chưa chắc chắn". Đây là tinh thần của phần kiểm tra độ bền ngưỡng NDVI được mô tả trong README của repo.
+Nếu không, kết luận chỉ là "chưa chắc chắn" cho giai đoạn đó — không cần loại cả giai đoạn khỏi bảng, chỉ cần ghi chú rõ trong báo cáo. Đây là tinh thần của phần kiểm tra độ bền ngưỡng NDVI được mô tả trong README của repo.
 
-### 5.6 Chú giải bản đồ
+### 5.6 Chú giải bản đồ (1 chú giải, dùng chung cho mọi giai đoạn)
 
 ```javascript
 function hangChuGiai(mau, chu) {
@@ -635,20 +661,24 @@ chuGiai.add(hangChuGiai("#ffd92f", "Rừng mới"));
 Map.add(chuGiai);
 ```
 
+Vì chỉ có 3 lớp và dùng chung cho mọi giai đoạn, chú giải này không cần vẽ lại khi bạn bật lớp biến động của giai đoạn khác trong khung Layers — nó luôn đúng cho bất kỳ giai đoạn nào đang hiện.
+
 ---
 
 ## Mục 6. Hoàn thành vùng mẫu ĐBSCL và tính độ chính xác
 
 ### 6.1 Vùng mẫu
 
-**Đất Mũi, Cà Mau** (mũi cực Nam), hình chữ nhật `[104.72, 8.56, 104.92, 8.74]`, khoảng 22 × 20 km. Vùng này được chọn vì rừng ngập mặn chiếm ưu thế ven biển, có dữ liệu GMW để đối chiếu, và đủ nhỏ để mọi phép tính chạy trong vài chục giây. Đa giác Đất Mũi trong shapefile xã của repo (`ma_xa` = 34017) có khung bao `[104.71, 8.56, 104.92, 8.73]`, gần như trùng với hình chữ nhật này.
+**Đất Mũi, Cà Mau** (mũi cực Nam), hình chữ nhật `[104.72, 8.56, 104.92, 8.74]`, khoảng 22 × 20 km. Vùng này được chọn vì rừng ngập mặn chiếm ưu thế ven biển, có dữ liệu GMW để đối chiếu, và đủ nhỏ để mọi phép tính chạy trong vài phút. Đa giác Đất Mũi trong shapefile xã của repo (`ma_xa` = 34017) có khung bao `[104.71, 8.56, 104.92, 8.73]`, gần như trùng với hình chữ nhật này.
 
 Sản phẩm cần có sau mục này:
 
-- [ ] 1 bản đồ biến động 3 lớp (ổn định / mất / mới), giai đoạn 2020 → 2025, có chú giải
-- [ ] Bảng diện tích (ha): rừng 2 năm, mất, mới, ròng
-- [ ] Bảng độ chính xác: Overall Accuracy, Producer's / User's Accuracy, Kappa
-- [ ] File GeoTIFF xuất ra Google Drive
+- [ ] 8 bản đồ biến động 3 lớp (ổn định / mất / mới), 1 cho mỗi giai đoạn giữa 9 mốc năm 1988→nay, dùng chung 1 chú giải
+- [ ] Bảng diện tích (ha) theo từng mốc năm
+- [ ] Bảng biến động theo giai đoạn: mất / mới / ròng (ha), tỷ lệ % (so với rừng đầu kỳ), tốc độ ha/năm
+- [ ] So sánh giai đoạn gần nhất với trung bình các giai đoạn lịch sử (z-score)
+- [ ] Bảng độ chính xác so với GMW cho các mốc có tham chiếu (1997≈1996, 2010, 2015, 2020): Overall Accuracy, Producer's / User's Accuracy, Kappa
+- [ ] File GeoTIFF (1 mỗi giai đoạn) + CSV xuất ra Google Drive
 
 Toàn bộ do một file làm ra: [gee_code_editor/bien_dong_rnm_dat_mui.js](../gee_code_editor/bien_dong_rnm_dat_mui.js).
 
@@ -658,63 +688,83 @@ Script hoàn chỉnh nằm trong một file riêng, đã kiểm tra cú pháp: [
 
 1. Mở file trong VS Code, chọn hết (Ctrl+A), sao chép (Ctrl+C).
 2. Trong Code Editor: **Scripts → NEW → File**, đặt tên, dán vào khung code.
-3. Bấm **Run**. Chỉ cần sửa khối `0. THAM SỐ` ở đầu file (AOI, hai năm, ngưỡng NDVI, công tắc mặt nạ mây).
+3. Bấm **Run**. Chỉ cần sửa khối `0. THAM SỐ` ở đầu file (AOI, danh sách mốc năm `MILESTONES`, ngưỡng NDVI mỗi mốc, ROI, công tắc mặt nạ mây).
+4. **Chạy khoảng 2–5 phút** (9 mốc năm × nhiều phép tính), lâu hơn hẳn bản chỉ so 2 năm — đây là bình thường, không phải lỗi.
 
-File gồm 9 phần, khớp với các mục 3–6 của hướng dẫn:
+File gồm 11 phần:
 
-| Phần | Nội dung                                                   | Mục hướng dẫn |
-| ---- | ---------------------------------------------------------- | ------------- |
-| 0    | Tham số (gồm ROI: `ROI_POLYGON`, `MAX_DIST_SEA_KM`)         | 4.5, 6.1      |
-| 1    | Hàm: ROI, mặt nạ mây, ảnh ghép + NDVI, diện tích, độ chính xác | 3, 4, 5   |
-| 2–3  | Mặt nạ rừng 2 năm, phát hiện mất / mới / ổn định           | 4, 5.1        |
-| 4    | Bản đồ 3 lớp + chú giải                                    | 5.1, 5.6      |
-| 5    | Bảng diện tích + biểu đồ                                   | 5.2, 5.4      |
-| 6    | Độ chính xác so với GMW                                    | 6.3           |
-| 7    | Quét ngưỡng NDVI (tuỳ chọn, `RUN_SWEEP = true`)            | 6.4           |
-| 8    | Điểm tham chiếu tự chọn (tuỳ chọn, bỏ dấu chú thích)       | 6.5           |
-| 9    | Xuất GeoTIFF và CSV ra Google Drive                        | 6.2           |
+| Phần | Nội dung                                                       | Mục hướng dẫn |
+| ---- | ---------------------------------------------------------------- | ------------- |
+| 0    | Tham số: `MILESTONES` (9 mốc năm), `ROI_POLYGON`/`MAX_DIST_SEA_KM` | 4.5, 6.1    |
+| 1    | Hàm: ROI, mặt nạ mây, ảnh ghép + NDVI theo cảm biến, diện tích, độ chính xác | 3, 4  |
+| 2    | Mặt nạ rừng cho TỪNG mốc năm (vòng lặp qua `MILESTONES`)          | 4, 5.1        |
+| 3    | Phát hiện biến động cho TỪNG giai đoạn (vòng lặp qua các cặp mốc liên tiếp) | 5.1     |
+| 4    | Bản đồ: 1 lớp biến động/giai đoạn + 1 chú giải chung              | 5.1, 5.6      |
+| 5    | Bảng diện tích theo mốc năm                                       | 5.2           |
+| 6    | Bảng biến động theo giai đoạn (mất/mới/ròng/%/tốc độ) + z-score so lịch sử | 5.3, 5.4 |
+| 7    | Độ chính xác so với GMW cho các mốc trùng                         | 6.3           |
+| 8    | Quét ngưỡng NDVI (tuỳ chọn, `RUN_SWEEP = true`)                   | 6.4           |
+| 9    | Điểm tham chiếu tự chọn cho mốc 'nay' (tuỳ chọn, bỏ dấu chú thích) | 6.5, Mục 7   |
+| 10   | Xuất GeoTIFF (mỗi giai đoạn) và CSV ra Google Drive                | 6.2           |
 
 > **Lưu ý khi dán code:** nếu VS Code tự định dạng file bằng Prettier, hãy dùng file `.prettierrc` ở gốc repo (đã có). Cấu hình mặc định của Prettier 3 thêm dấu phẩy thừa sau tham số cuối của lời gọi hàm (dạng `Map.addLayer(a, b, "tên",` rồi xuống dòng `);`), và Code Editor không chấp nhận cú pháp đó.
 
 Sau khi bấm **Run**:
 
-1. **Console** hiện số cảnh từng năm, bảng diện tích, biểu đồ, và độ chính xác so với GMW. Đợi vài chục giây nếu kết quả chưa hiện.
-2. **Bản đồ** hiện lớp "BIẾN ĐỘNG 2020-2025". Bật thêm các lớp khác ở góc phải trên (Layers).
+1. **Console** hiện số cảnh từng mốc năm, bảng diện tích theo mốc, bảng biến động theo giai đoạn, z-score, và độ chính xác so với GMW. Đợi vài phút nếu kết quả chưa hiện hết.
+2. **Bản đồ** hiện lớp "BIẾN ĐỘNG 2020 - nay" (giai đoạn gần nhất). Bật thêm các giai đoạn khác ở góc phải trên (Layers) — mỗi giai đoạn là 1 lớp riêng, dùng chung 1 chú giải.
 3. Bấm vào bản đồ, xem tab **Inspector** để đối chiếu giá trị từng lớp tại điểm đó.
-4. Tab **Tasks** hiện 2 việc xuất file (ảnh và CSV): bấm **Run** ở từng dòng → xác nhận → file xuất hiện trong Google Drive của bạn.
+4. Tab **Tasks** hiện 10 việc xuất file (8 GeoTIFF, 1 mỗi giai đoạn, + 2 CSV): bấm **Run** ở từng dòng → xác nhận → file xuất hiện trong Google Drive của bạn.
 
 ### 6.3 Số liệu tham chiếu để bạn đối chiếu
 
-Kết quả khi tôi chạy cùng logic với cấu hình mặc định của file (`USE_SCL_MASK = true`, ngưỡng 0,25, `MAX_DIST_SEA_KM = 5`) bằng Python API ngày 21/09/2026. Dữ liệu GEE có thể được cập nhật nên số của bạn có thể lệch nhẹ; nếu lệch nhiều là dấu hiệu bạn đã làm khác đi.
+Kết quả khi tôi chạy cùng logic (`USE_SCL_MASK = true`, `MAX_DIST_SEA_KM = 5`, ngưỡng 0,10 cho Landsat / 0,25 cho Sentinel-2) bằng Python API ngày 22/09/2026. Dữ liệu GEE có thể được cập nhật nên số của bạn có thể lệch nhẹ; nếu lệch nhiều là dấu hiệu bạn đã làm khác đi. ROI (cách biển ≤ 5 km) rộng **34.909 ha**.
 
-| Chỉ tiêu                             | 2020   | 2025   |
-| ------------------------------------ | ------ | ------ |
-| Số cảnh trong ảnh ghép               | 33     | 29     |
-| Diện tích rừng trong ROI (ha)        | 18.610 | 18.640 |
+**Diện tích rừng theo mốc năm (trong ROI):**
 
-ROI rộng 34.909 ha. Rừng GMW 2020 nằm trong ROI: 17.270 ha, nằm ngoài ROI: 5.595 ha.
+| Mốc năm                | 1988   | 1992   | 1997   | 2001   | 2005   | 2010   | 2015   | 2020   | nay (2026) |
+| ----------------------- | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ---------- |
+| Số cảnh trong ảnh ghép  | 12     | 9      | 18     | 8      | 20     | 9      | 24     | 33     | 34         |
+| Diện tích rừng (ha)     | 16.823 | 13.139 | 15.849 | 18.494 | 15.698 | 17.526 | 19.968 | 18.623 | 18.147     |
 
-Biến động 2020 → 2025 trong ROI: ổn định **16.969 ha**, mất **1.641 ha**, mới **1.672 ha**, ròng **+31 ha** (gần như không đổi).
+**Cảnh báo ngay từ bảng này:** các mốc Landsat (1988–2015) có **rất ít cảnh** (8–24) so với Sentinel-2 (33–34). Hai mốc 1992 (9 cảnh) và 2001 (8 cảnh) đặc biệt ít — đây chính là 2 mốc "lõm/nhọn" bất thường trong bảng diện tích. Cần nghi ngờ đây một phần là composite nhiễu do thiếu ảnh sạch, không hẳn là biến động thật (xem mục 5.5).
 
-Độ chính xác năm 2020 so với GMW, chỉ tính trong ROI (điểm ảnh 30 m):
+**Bảng biến động theo giai đoạn:**
 
-| Overall Accuracy | Producer's | User's | Kappa |
-| ---------------- | ---------- | ------ | ----- |
-| 0,828            | 0,865      | 0,803  | 0,656 |
+| Giai đoạn       | Mất (ha) | Mới (ha) | Ròng (ha) | Tốc độ (ha/năm) | % mất | % mới |
+| --------------- | -------- | -------- | --------- | ---------------- | ----- | ----- |
+| 1988–1992       | 4.170    | 485      | −3.685    | **−921,2**       | 24,8% | 2,9%  |
+| 1992–1997       | 1.368    | 4.078    | +2.710    | **+542,0**       | 10,4% | 31,0% |
+| 1997–2001       | 858      | 3.503    | +2.645    | **+661,2**       | 5,4%  | 22,1% |
+| 2001–2005       | 3.481    | 685      | −2.796    | **−698,9**       | 18,8% | 3,7%  |
+| 2005–2010       | 1.381    | 3.210    | +1.828    | **+365,6**       | 8,8%  | 20,4% |
+| 2010–2015       | 515      | 2.957    | +2.442    | **+488,4**       | 2,9%  | 16,9% |
+| 2015–2020       | 2.275    | 930      | −1.345    | **−269,0**       | 11,4% | 4,7%  |
+| 2020–nay (2026) | 2.146    | 1.670    | −476      | **−79,4**        | 11,5% | 9,0%  |
 
-Cách đọc: Kappa 0,66 nghĩa là mức đồng thuận **khá**. User's 0,80 nghĩa là khoảng 20% "rừng" tìm được không phải rừng theo GMW. Phần "thừa" còn lại có thể đến từ bờ đê có cây, rừng trồng xen kẽ ao tôm (chỉ số quang phổ không tách được), và cả sai số của chính GMW.
+**So sánh giai đoạn gần nhất với lịch sử (mục 5.4):** trung bình tốc độ 7 giai đoạn lịch sử (1988–2020) là **+24,0 ha/năm**, độ lệch chuẩn **646,6 ha/năm** — biến thiên rất lớn giữa các giai đoạn lịch sử. Tốc độ giai đoạn gần nhất (2020 → nay) là **−79,4 ha/năm**, cho z-score ≈ **−0,16**. Đọc kết quả: |z| < 2 nên **giai đoạn gần đây KHÔNG khác thường** so với biến động lịch sử của chính vùng này — biên độ dao động lịch sử (có giai đoạn tới ±900 ha/năm) còn lớn hơn nhiều mức giảm hiện tại.
 
-**So sánh cùng dữ liệu khi không dùng ROI** (`MAX_DIST_SEA_KM = 0`): Kappa 0,593; mất 2.932 ha; mới 2.448 ha; ròng −484 ha. Phần biến động bị loại nằm ở ngoài ROI (đất liền cách biển hơn 5 km); nhiều khả năng do cây trồng thay đổi theo mùa vụ, nhưng tôi chưa kiểm chứng trực tiếp trên ảnh.
+**Độ chính xác so với GMW cho các mốc trùng (trong ROI):**
 
-Ba bài học từ thử nghiệm:
+| Mốc (so với GMW)             | Overall Accuracy | Producer's | User's | Kappa |
+| ----------------------------- | ----------------- | ---------- | ------ | ----- |
+| 1997 vs GMW 1996 (lệch 1 năm) | 0,811              | 0,779      | 0,814  | 0,620 |
+| 2010 vs GMW 2010              | 0,846              | 0,859      | 0,829  | 0,692 |
+| 2015 vs GMW 2015              | 0,863              | 0,938      | 0,815  | 0,727 |
+| 2020 vs GMW 2020              | 0,828              | 0,865      | 0,803  | 0,657 |
 
-- **Giới hạn không gian:** xem mục 4.5. Cùng thuật toán, chỉ đổi cách giới hạn vùng, Kappa ở khung nhiều đất liền (vùng B) tăng từ 0,37 lên 0,53.
-- **Mây:** kết quả biến động phụ thuộc mạnh vào việc loại mây (bảng ở mục 3.5). Độ chính xác 2020 gần như không đổi giữa hai cách loại mây (Kappa 0,594 và 0,593), nhưng số liệu biến động thì khác nhiều.
-- Vì vậy, **độ chính xác của một năm không đủ để tin vào bản đồ biến động giữa hai năm**. Hãy kiểm tra thêm bằng điểm tham chiếu tự chọn (mục 6.5).
+Cách đọc: Kappa 0,62–0,73 (trung bình đến khá) qua cả 4 mốc kiểm chứng được — phương pháp có mức tin cậy tương đối ổn định theo thời gian, không riêng năm 2020. Kappa cao nhất ở 2015 (0,727), thấp nhất ở 1997 (0,620, cũng là mốc so khớp gần đúng lệch 1 năm nên tự nhiên kém chính xác hơn).
+
+Bốn bài học từ thử nghiệm:
+
+- **Giới hạn không gian (ROI) vẫn cần thiết cho mọi mốc năm, không chỉ 2020/2025:** xem mục 4.5.
+- **Độ tin cậy không đều theo thời gian:** các mốc Landsat cũ (đặc biệt 1992, 2001) có ít cảnh, nên số liệu các giai đoạn liền kề chúng (1988–1992, 1992–1997, 1997–2001, 2001–2005) kém tin cậy hơn các giai đoạn Sentinel-2 gần đây.
+- **Biến thiên lịch sử tự nhiên đã rất lớn** (độ lệch chuẩn 646,6 ha/năm): một giai đoạn "giảm" không tự động là bất thường, phải so với z-score.
+- Vì vậy, **độ chính xác so với GMW của một mốc không đủ để tin vào bản đồ biến động của một giai đoạn** — luôn kiểm tra số cảnh (mục 3.3) và độ bền theo ngưỡng/mặt nạ mây (mục 5.5) cho từng giai đoạn cụ thể bạn đang diễn giải.
 
 ### 6.4 Độ chính xác (b): quét ngưỡng NDVI
 
-Đặt `RUN_SWEEP = true` ở đầu script rồi Run lại. Script in độ chính xác của năm A với các ngưỡng 0,10–0,35 (giống `_threshold_sweep.csv` của repo). Kết quả tham chiếu dưới đây tính **khi không dùng ROI** (`MAX_DIST_SEA_KM = 0`), 2020, Sentinel-2, so với GMW. Tôi chưa chạy lại phép quét ngưỡng với ROI, nên hãy bật `RUN_SWEEP = true` với cấu hình của bạn để có bảng đúng cho vùng của mình:
+Đặt `RUN_SWEEP = true` và `SWEEP_YEAR = 2020` ở đầu script rồi Run lại. Script in độ chính xác của mốc đó với các ngưỡng 0,10–0,35 (giống `_threshold_sweep.csv` của repo). Kết quả tham chiếu dưới đây tính **khi không dùng ROI** (`MAX_DIST_SEA_KM = 0`), 2020, Sentinel-2, so với GMW — tôi chưa chạy lại phép quét với ROI, hãy bật `RUN_SWEEP = true` với cấu hình của bạn để có bảng đúng cho vùng của mình:
 
 | Ngưỡng NDVI | Overall | Producer's | User's | Kappa |
 | ----------- | ------- | ---------- | ------ | ----- |
@@ -725,11 +775,11 @@ Ba bài học từ thử nghiệm:
 | 0,30        | 0,787   | 0,821      | 0,782  | 0,573 |
 | 0,35        | 0,775   | 0,780      | 0,786  | 0,548 |
 
-Ở vùng này, Kappa giảm nhẹ khi tăng ngưỡng còn User's tăng nhẹ (thừa ít hơn, bỏ sót nhiều hơn). Chênh lệch giữa các ngưỡng không lớn, nên ngưỡng 0,25 của repo là hợp lý và giữ được tính nhất quán với bản đồ toàn ĐBSCL. Nếu bạn đổi ngưỡng cho năm A, **phải áp dụng cùng ngưỡng cho năm B**, nếu không phép so sánh không còn ý nghĩa.
+Ở vùng này, Kappa giảm nhẹ khi tăng ngưỡng còn User's tăng nhẹ (thừa ít hơn, bỏ sót nhiều hơn). Chênh lệch giữa các ngưỡng không lớn, nên ngưỡng 0,25 của repo là hợp lý và giữ được tính nhất quán với bản đồ toàn ĐBSCL. **Ngưỡng phải giữ cố định cho mọi mốc năm cùng cảm biến** — đổi ngưỡng cho một mốc mà không đổi mốc kia làm mọi phép so sánh giữa các giai đoạn mất ý nghĩa.
 
-### 6.5 Độ chính xác (c): điểm tham chiếu tự chọn (đặc biệt cho năm 2025)
+### 6.5 Độ chính xác (c): điểm tham chiếu tự chọn (đặc biệt cho mốc 'nay')
 
-GMW không có 2025, nên năm này cần tự lập điểm tham chiếu. Cách làm chuẩn của GEE:
+GMW không có năm 2026, nên mốc 'nay' cần tự lập điểm tham chiếu. Cách làm ở đây chỉ là bản tóm tắt nhanh dùng ngay cho script mục 6.2 — cách làm đầy đủ (kể cả khi dùng cho **mẫu huấn luyện** phân loại nhiều lớp, không chỉ điểm kiểm chứng 2 lớp) nằm ở **Mục 7** ngay sau đây.
 
 1. Chuyển bản đồ sang **Satellite** để nhìn ảnh độ phân giải cao của Google.
 2. Trong công cụ vẽ (góc trên trái bản đồ) bấm **Add a marker**, rồi bấm lên bản đồ để đặt điểm ở nơi bạn **chắc chắn là rừng ngập mặn**. Ghi ít nhất **50 điểm**, rải khắp AOI, cách nhau ≥ 100 m, đặt vào giữa các mảng rừng đồng nhất (tránh sát ranh giới).
@@ -738,17 +788,17 @@ GMW không có 2025, nên năm này cần tự lập điểm tham chiếu. Cách
    - **Import as:** `FeatureCollection`
    - **Add property:** tên `ref`, giá trị `1`
 4. Lặp lại cho các nơi **không phải rừng ngập mặn** (nước, bãi bùn, ao tôm, đất trống, rừng tràm, lúa…): layer `otherPts`, thuộc tính `ref = 0`, ít nhất 50 điểm.
-5. Trong file script, ở phần `8.`, bỏ dấu `/*` và `*/` sau khi đã tạo 2 layer. Nội dung khối đó:
+5. Trong file script, ở phần `9.`, bỏ dấu `/*` và `*/` sau khi đã tạo 2 layer. Nội dung khối đó:
 
 ```javascript
 /*
 var refPts = mangrovePts.merge(otherPts);
-
-var mau = maskB.rename('pred').toInt().sampleRegions({
-  collection: refPts, properties: ['ref'], scale: 30
+var maskNay = maskByYear[LAST_YEAR];
+var mau = maskNay.rename('pred').toInt().sampleRegions({
+  collection: refPts, properties: ['ref'], scale: SCALE
 });
-var cm = mau.errorMatrix('ref', 'pred');       // hàng = thực tế, cột = dự đoán (0 = không rừng, 1 = rừng)
-print('Ma trận nhầm lẫn ' + YEAR_B, cm);
+var cm = mau.errorMatrix('ref', 'pred');   // hàng = thực tế, cột = dự đoán (0 = không rừng, 1 = rừng)
+print('Ma trận nhầm lẫn mốc nay', cm);
 print('Overall Accuracy:', cm.accuracy());
 print("Producer's Accuracy [không rừng, rừng]:", cm.producersAccuracy());
 print("User's Accuracy [không rừng, rừng]:",     cm.consumersAccuracy());
@@ -760,64 +810,217 @@ Lưu ý khi tự lập điểm tham chiếu:
 
 - Ảnh nền vệ tinh có thể không đúng năm bạn đang kiểm chứng. Hãy chọn các điểm mà tình trạng (rừng / không rừng) chắc chắn không đổi, hoặc đối chiếu thêm bằng Timelapse.
 - Số điểm ít (~100) cho ước lượng dao động khá lớn. Hãy nêu số điểm khi báo cáo.
-- Chọn điểm thủ công dễ thiên về nơi "dễ nhìn". Nếu cần chặt chẽ hơn, hãy tạo điểm ngẫu nhiên bằng `ee.FeatureCollection.randomPoints(AOI, 100, 42)` rồi gán nhãn từng điểm.
-- Độ chính xác của **bản đồ biến động** thấp hơn độ chính xác của từng năm, vì sai số hai năm cộng dồn. Hãy đọc con số mất / mới với sự thận trọng.
+- Chọn điểm thủ công dễ thiên về nơi "dễ nhìn". Nếu cần chặt chẽ hơn, hãy tạo điểm ngẫu nhiên bằng `ee.FeatureCollection.randomPoints(AOI, 100, 42)` rồi gán nhãn từng điểm (xem Mục 7.3).
+- Độ chính xác của **bản đồ biến động** thấp hơn độ chính xác của từng mốc, vì sai số hai mốc cộng dồn. Hãy đọc con số mất / mới với sự thận trọng.
 
 ### 6.6 Kiểm tra cuối và cách trình bày sản phẩm
 
 Trước khi coi là xong:
 
-- [ ] Ảnh màu thật của cả hai năm không còn mảng mây lớn (bật lớp `Ảnh 2020`, `Ảnh 2025` để xem) và số cảnh hai năm không chênh nhau quá nhiều
-- [ ] Bản đồ trông hợp lý so với ảnh nền (rừng ven biển được tô, biển và ao không bị tô)
+- [ ] Ảnh màu thật của các mốc năm không còn mảng mây lớn (bật lớp `Ảnh <mốc>` để xem); mốc nào ít cảnh (mục 6.3) đã được ghi chú độ tin cậy thấp hơn
+- [ ] Bản đồ trông hợp lý so với ảnh nền (rừng ven biển được tô, biển và ao không bị tô) ở giai đoạn gần nhất và ít nhất 1 giai đoạn cũ
 - [ ] Đã bật lớp `Vùng lọc (ROI)`, kiểm tra ROI phủ hết dải rừng và không lấn vào ruộng / vườn; đã xem số `Rừng GMW nằm ngoài ROI`
-- [ ] Đã có Overall Accuracy và Kappa (ít nhất so với GMW)
-- [ ] Đã thử đổi ngưỡng / bật mặt nạ mây và xu hướng không đổi chiều (mục 5.5)
-- [ ] Đã xuất GeoTIFF và CSV
+- [ ] Đã có Overall Accuracy và Kappa so với GMW cho ít nhất 2 mốc
+- [ ] Đã xem z-score của giai đoạn gần nhất so với lịch sử (mục 5.4) và giải thích được ý nghĩa
+- [ ] Đã thử đổi ngưỡng / bật mặt nạ mây và xu hướng của giai đoạn gần nhất không đổi chiều (mục 5.5)
+- [ ] Đã xuất GeoTIFF (từng giai đoạn) và CSV
 
 Khi ghi vào báo cáo, nên nêu rõ:
 
-> Bản đồ biến động rừng ngập mặn 2020–2025 vùng Đất Mũi được suy ra từ ngưỡng NDVI (0,25) của ảnh ghép median cả năm Sentinel-2 đã loại mây theo điểm ảnh (band SCL), giới hạn trong dải cách biển không quá 5 km để hạn chế lẫn với cây trồng. Độ chính xác so với Global Mangrove Watch năm 2020 trong vùng này: OA = 0,83; Kappa = 0,66. GMW không có năm 2025 nên kết quả 2025 chưa được kiểm chứng trực tiếp. Diện tích rừng gần như không đổi (ròng +31 ha), trong khi mất và mới đều khoảng 1.650 ha, mức thay đổi thuần thấp hơn sai số phân loại nên cần đọc thận trọng.
+> Chuỗi bản đồ biến động rừng ngập mặn 1988–nay vùng Đất Mũi được suy ra từ ngưỡng NDVI theo cảm biến (0,10 Landsat / 0,25 Sentinel-2) của ảnh ghép median cả năm, giới hạn trong dải cách biển không quá 5 km để hạn chế lẫn với cây trồng. Độ chính xác so với Global Mangrove Watch dao động Kappa 0,62–0,73 qua 4 mốc kiểm chứng được (1997, 2010, 2015, 2020). Tốc độ biến động ròng giai đoạn gần nhất (2020 → nay, −79,4 ha/năm) nằm trong biên độ dao động bình thường so với 7 giai đoạn lịch sử (trung bình +24,0, độ lệch chuẩn 646,6 ha/năm; z ≈ −0,16). Các mốc Landsat có ít cảnh (đặc biệt 1992 và 2001) khiến số liệu quanh chúng kém tin cậy hơn giai đoạn Sentinel-2 gần đây; GMW không có năm 2026 nên mốc 'nay' chưa được kiểm chứng trực tiếp bằng GMW (xem điểm tham chiếu tự chọn, mục 6.5/Mục 7).
 
 ### 6.7 Mở rộng ra toàn ĐBSCL
 
-Khi đã quen, chuyển sang bản đầy đủ [gee_code_editor/mangrove_analysis.js](../gee_code_editor/mangrove_analysis.js): đa giác AOI 974 đỉnh, 10 mốc năm (1988–2026), 9 giai đoạn mất / mới, bảng màu chú giải. Việc cần thêm để có độ tin cậy như MAP05:
+Khi đã quen, chuyển sang bản đầy đủ [gee_code_editor/mangrove_analysis.js](../gee_code_editor/mangrove_analysis.js): đa giác AOI 974 đỉnh, 9 mốc năm (1988–2026), 8 giai đoạn. Việc cần thêm để có độ tin cậy như MAP05 **và** khớp với cách gộp 3 lớp + ROI của mục 5–6:
 
-- Tính diện tích từng năm và từng giai đoạn (mục 5.2) bằng `reduceRegion`; với vùng lớn, tăng `scale` hoặc chia nhỏ để không vượt giới hạn bộ nhớ.
-- So sánh với GMW cho 1997 (dùng GMW 1996), 2010, 2015, 2020.
+- File này hiện **chưa có ROI riêng** — đa giác 974 đỉnh đã tự đóng vai trò như một `ROI_POLYGON` vẽ tay rất chi tiết cho toàn ĐBSCL, nên có thể giữ nguyên logic đó, chỉ cần thêm mặt nạ mây SCL (mục 3.5) cho Sentinel-2.
+- Vẫn dùng bảng màu Loss/Gain 9 sắc riêng (2 lớp mỗi giai đoạn) thay vì 1 bản đồ gộp 3 lớp/giai đoạn. Muốn khớp với cách làm ở mục 5–6, đổi sang đúng logic `ee.Image(0).where(...)` như mục 5.1, dùng lại 1 chú giải 3 màu cho toàn bộ 8 giai đoạn.
+- Tính diện tích từng mốc và từng giai đoạn (mục 5.2–5.4) bằng `reduceRegion`; với vùng lớn, tăng `scale` hoặc chia nhỏ theo tỉnh để không vượt giới hạn bộ nhớ.
+- So sánh với GMW cho 1997 (dùng GMW 1996), 2010, 2015, 2020 (mục 6.3).
 - Thống kê theo xã bằng `reduceRegions` trên tài sản shapefile xã (mục 2.5).
+- Đây chính là "nhánh A" của [đề cương 12 tuần](DE_CUONG_12_TUAN_BIEN_DONG_RNM.md) khi mở rộng sang toàn vùng 109 xã. Nhánh B (phân loại nhiều lớp) cần mẫu — xem Mục 7.
+
+---
+
+## Mục 7 (Mở rộng). Thu thập mẫu để kiểm chứng hoặc huấn luyện
+
+Mục 1–6 chỉ dùng ngưỡng NDVI, **không cần mẫu** (chỉ cần đối chiếu với GMW, một bộ dữ liệu công khai). Nhưng GMW có 2 hạn chế lớn:
+
+1. Chỉ là bản đồ **rừng / không rừng** (raster), không có điểm mẫu cho bạn, và không phân biệt được nuôi trồng thuỷ sản / nông nghiệp / đô thị — nếu muốn tách các lớp này (như nhánh phân loại có giám sát của [đề cương 12 tuần](DE_CUONG_12_TUAN_BIEN_DONG_RNM.md), tuần 5–8), phải có mẫu của **từng lớp**.
+2. Không có năm 2025/2026 — mốc 'nay' không kiểm chứng được bằng GMW, phải tự tạo điểm tham chiếu (đã nêu tóm tắt ở mục 6.5).
+
+Vì vậy: **có, mẫu phải tự thu thập** — và **có, cách chuẩn để làm là chọn điểm ngay trên bản đồ GEE**, nhìn ảnh vệ tinh trực tiếp trong Code Editor. Đây đúng là cách đoạn code Random Forest tham khảo (vùng Cần Giờ) đã làm: các biến `Green_Forest`, `Water_body`, `Salt_Agric`, `Crop_Land`, `Urban` trong ví dụ đó chính là các FeatureCollection được tạo ra từ việc vẽ điểm/đa giác trực tiếp trên bản đồ.
+
+### 7.1 Trước khi vẽ điểm: xác định 2 điều
+
+1. **Mẫu để làm gì?**
+   - (a) Chỉ **kiểm chứng** mặt nạ NDVI 2 lớp (rừng / không rừng) — đã đủ dùng cách ở mục 6.5, không cần đọc hết mục này.
+   - (b) **Huấn luyện** một bộ phân loại nhiều lớp (ví dụ Random Forest) — cần nhiều mẫu hơn, đủ mỗi lớp, và cần tách tập huấn luyện / kiểm tra (mục 7.4).
+2. **Bao nhiêu lớp?** Khớp với luật gán nhãn ở tuần 5 của đề cương 12 tuần — ví dụ 5 lớp: **Rừng ngập mặn / Mặt nước / Nuôi trồng thuỷ sản (ao tôm) / Nông nghiệp và cây trồng khác / Đô thị và đất trống**. Viết ra ví dụ điển hình và trường hợp "khó" (rừng xen ao tôm, đất ngập nước nông, bờ đê có cây) cho mỗi lớp trước khi vẽ điểm — nếu không, bạn sẽ gán nhãn không nhất quán giữa các lô làm khác ngày.
+
+### 7.2 Cách 1: Chọn điểm thủ công ngay trên bản đồ (nhìn ảnh, tự quyết định)
+
+Làm được ngay trong Code Editor, không cần công cụ nào khác.
+
+1. Chuyển bản đồ sang **Satellite**, hoặc bật lớp ảnh màu thật của đúng năm cần lấy mẫu (mục 3.2) — **nhãn phải khớp với ảnh của năm đó**, không dùng ảnh nền hiện tại để gán nhãn cho năm 1997.
+2. Phóng to (zoom) tới khu vực bạn **chắc chắn** thuộc 1 lớp, đồng nhất, không lẫn loại khác.
+3. Dùng công cụ **Geometry** (góc trên-trái bản đồ) → chọn kiểu **Point** (hoặc **Marker**) → bấm từng điểm lên bản đồ.
+4. Khi xong 1 lớp, bấm biểu tượng bánh răng của layer geometry vừa vẽ:
+   - Đổi tên (ví dụ `rung2020`)
+   - **Import as:** `FeatureCollection`
+   - **Add property:** đặt tên cột (ví dụ `lop`), giá trị số cho lớp đó (ví dụ `0` = rừng ngập mặn)
+5. Lặp lại, **mỗi lớp một layer riêng** (dễ kiểm tra, dễ sửa nếu lỡ tay), ví dụ `nuoc2020` (`lop = 1`), `aoTom2020` (`lop = 2`), `nongNghiep2020` (`lop = 3`), `doThi2020` (`lop = 4`).
+6. Gộp (merge) tất cả thành 1 bộ mẫu:
+
+```javascript
+var mau2020 = rung2020
+  .merge(nuoc2020)
+  .merge(aoTom2020)
+  .merge(nongNghiep2020)
+  .merge(doThi2020);
+print('Số điểm mỗi lớp:', mau2020.aggregate_histogram('lop'));
+```
+
+7. **Xuất mẫu ra Asset** để dùng lại nhiều lần (không phải vẽ lại mỗi lần Run script):
+
+```javascript
+Export.table.toAsset({
+  collection: mau2020,
+  description: 'mau_2020',
+  assetId: 'mau_2020'
+});
+```
+
+Sau khi tác vụ Export chạy xong (tab Tasks), nạp lại ở script khác bằng:
+
+```javascript
+var mau2020 = ee.FeatureCollection('projects/<project-của-bạn>/assets/mau_2020');
+```
+
+**Quy tắc khi bấm điểm thủ công** (khớp với luật gán nhãn ở đề cương, tuần 5):
+
+- Đặt điểm vào **giữa** vùng đồng nhất, cách ranh giới với lớp khác ít nhất 1–2 điểm ảnh (≥ 20–30 m với Sentinel-2, ≥ 60–90 m với Landsat).
+- Các điểm cùng lớp nên cách nhau ≥ 100 m, để không lấy nhiều điểm cùng mô tả 1 vị trí (tự tương quan không gian).
+- **Không lấy** điểm ở nơi bạn còn nghi ngờ hoặc ở ranh giới lai giữa 2 lớp — bỏ qua, không cố đoán.
+- Ghi lại luật này thành văn bản (1 trang) trước khi bắt đầu, đặc biệt nếu có nhiều người cùng gán nhãn.
+
+**Ưu điểm:** nhìn ảnh thật nên chọn đúng, kiểm soát tốt loại đất, làm nhanh cho các lớp hiếm (ví dụ ao tôm nhỏ, khó rơi vào mẫu ngẫu nhiên).
+**Nhược điểm:** tốn thời gian; **dễ thiên vị** chọn "nơi dễ nhìn, điển hình" — bộ mẫu có thể không đại diện hết sự đa dạng của vùng, làm độ chính xác đo được lạc quan hơn thực tế.
+
+### 7.3 Cách 2: Vị trí ngẫu nhiên (hoặc ngẫu nhiên phân tầng), vẫn tự gán nhãn bằng mắt
+
+Không có cách nào tự động gán nhãn — bạn luôn phải tự nhìn và quyết định lớp. Điều thay đổi ở đây là **vị trí điểm do máy chọn ngẫu nhiên**, không phải do bạn chọn "nơi dễ nhìn", để mẫu đại diện tốt hơn cho toàn vùng.
+
+**Ngẫu nhiên đơn giản trong AOI:**
+
+```javascript
+var diemNgauNhien = ee.FeatureCollection.randomPoints({
+  region: AOI,
+  points: 200,
+  seed: 42   // cố định seed để chạy lại ra đúng các điểm này
+});
+Map.addLayer(diemNgauNhien, {color: 'ff0000'}, 'Điểm ngẫu nhiên (chưa gán nhãn)');
+```
+
+Sau đó bấm vào từng điểm (hoặc phóng to quanh nó), tự quyết định lớp, rồi gán bằng tay — ví dụ mở bảng thuộc tính từng feature hoặc dùng lại cách "vẽ marker trùng vị trí rồi gán property" ở mục 7.2.
+
+**Ngẫu nhiên phân tầng theo bản đồ nền (tốt hơn, khớp với đề cương tuần 5):** rải điểm đều theo từng "vùng" của bản đồ biến động (mục 5), để không bị dồn hết vào vùng rộng nhất (ví dụ "ổn định") và bỏ sót vùng hiếm (ví dụ "mới"):
+
+```javascript
+var vung = bienDong.unmask(0);  // 0 = không rừng, 1 = ổn định, 2 = mất, 3 = mới
+var diemPhanTang = vung.stratifiedSample({
+  numPoints: 50,        // 50 điểm cho MỖI giá trị (0, 1, 2, 3)
+  classBand: 'change',
+  region: AOI,
+  scale: 30,
+  seed: 42,
+  geometries: true
+});
+Map.addLayer(diemPhanTang, {color: 'ff0000'}, 'Điểm phân tầng theo vùng biến động');
+```
+
+Với mỗi điểm trong `diemPhanTang`, bạn vẫn phải tự xem ảnh và gán **nhãn thật** (lớp trong 5 lớp của tuần 5), không dùng luôn giá trị `change` của nó — `stratifiedSample` chỉ giúp chọn **vị trí** rải đều, không thay được việc tự nhìn và gán nhãn.
+
+**So sánh hai cách:**
+
+| Tiêu chí         | Thủ công tự chọn vị trí (7.2)       | Ngẫu nhiên / ngẫu nhiên phân tầng (7.3) |
+| ----------------- | ------------------------------------- | ----------------------------------------- |
+| Tốc độ            | Nhanh hơn (chỉ chọn nơi rõ ràng)     | Chậm hơn (phải xử lý cả điểm mơ hồ, phải bỏ và vẽ lại điểm khác nếu rơi vào ranh giới) |
+| Đại diện cho vùng | Kém — thiên về nơi "dễ nhìn"          | Tốt hơn                                    |
+| Phù hợp nhất cho  | Điểm kiểm chứng nhanh (mục 6.5), bổ sung cho lớp hiếm | Mẫu huấn luyện chính, đánh giá độ chính xác khách quan |
+
+**Khuyến nghị:** dùng **ngẫu nhiên phân tầng làm khung chính**, rồi bổ sung một ít điểm thủ công cho lớp còn thiếu (ví dụ ao tôm nhỏ, rải rác, ít rơi vào mẫu ngẫu nhiên).
+
+### 7.4 Tách tập huấn luyện / kiểm tra theo KHỐI không gian
+
+Nếu mẫu dùng để **huấn luyện** (không chỉ kiểm chứng), phải để riêng một phần **không đụng tới** khi huấn luyện, dùng để kiểm tra độ chính xác sau cùng. Tách theo **từng điểm** (`ee.FeatureCollection.randomColumn()` rồi lọc theo tỉ lệ) là sai vì các điểm gần nhau thường giống nhau (tự tương quan không gian) — huấn luyện và kiểm tra bằng những điểm "gần như trùng vị trí" làm độ chính xác đo được lạc quan giả.
+
+Cách đúng: gán mỗi điểm vào 1 **khối** (ví dụ lưới 10 × 10 km) theo toạ độ, rồi chia khối (không chia điểm) thành huấn luyện / kiểm tra:
+
+```javascript
+function ganKhoi(feature) {
+  var lon = feature.geometry().coordinates().get(0);
+  var lat = feature.geometry().coordinates().get(1);
+  var khoi = ee.Number(lon).multiply(10).floor().format('%d')
+      .cat('_')
+      .cat(ee.Number(lat).multiply(10).floor().format('%d'));  // ~11 km mỗi khối
+  return feature.set('khoi', khoi);
+}
+
+var mauCoKhoi = mau2020.map(ganKhoi);
+var khoiNgauNhien = ee.FeatureCollection(mauCoKhoi.aggregate_array('khoi').distinct()
+    .map(function (k) { return ee.Feature(null, {khoi: k, r: Math.random()}); }));
+// Lọc mauCoKhoi theo danh sách khoi có r < 0.7 (huấn luyện) hoặc >= 0.7 (kiểm tra)
+```
+
+> Đoạn `Math.random()` phía client chỉ minh hoạ ý tưởng; trong script thật nên dùng `ee.FeatureCollection.randomColumn()` áp trên danh sách **khối** (không áp trên danh sách điểm) để giữ tính tái lập bằng `seed`.
+
+### 7.5 Sau khi có mẫu: dùng để làm gì tiếp
+
+- **Kiểm chứng 2 lớp** (rừng / không rừng): dùng thẳng ở mục 6.5 — không cần 5 lớp, không cần tách khối cầu kỳ như 7.4 (mẫu ít, chỉ để kiểm tra, không huấn luyện).
+- **Huấn luyện phân loại nhiều lớp** (Random Forest 5 lớp, như nhánh B của [đề cương 12 tuần](DE_CUONG_12_TUAN_BIEN_DONG_RNM.md), tuần 7–8): cần đủ mẫu mỗi lớp (đề cương đặt mục tiêu khoảng 150 điểm/lớp), tách khối (mục 7.4), rồi đưa vào `ee.Classifier.smileRandomForest(...)`. Phần này cần một script riêng (huấn luyện, chỉnh tham số, xuất bản đồ 5 lớp) — **chưa nằm trong 6 mục nền của hướng dẫn này**; xem đề cương hoặc hỏi thêm nếu cần viết script đó.
 
 ---
 
 ## Phụ lục A. Xử lý lỗi thường gặp
 
 | Thông báo / triệu chứng                                          | Nguyên nhân và cách sửa                                                                                               |
-| ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `ReferenceError: xxx is not defined`                             | Sai tên biến hoặc dùng biến trước khi khai báo. Kiểm tra chính tả (JS phân biệt hoa / thường)                         |
-| `Band pattern 'B8' did not match any bands` (hoặc tên band khác) | Ảnh không có band đó. Ví dụ dùng band Sentinel-2 cho ảnh Landsat. In `image.bandNames()` để xem tên band thật         |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| `ReferenceError: xxx is not defined`                              | Sai tên biến hoặc dùng biến trước khi khai báo. Kiểm tra chính tả (JS phân biệt hoa / thường)                         |
+| `Band pattern 'B8' did not match any bands` (hoặc tên band khác)  | Ảnh không có band đó. Ví dụ dùng band Sentinel-2 cho ảnh Landsat, hoặc mốc năm dùng nhầm `cfg` của cảm biến khác. In `image.bandNames()` để xem tên band thật |
 | `Collection query aborted after accumulating over 5000 elements` | Thao tác trên collection quá lớn (thường do thiếu `filterBounds` / `filterDate`). Lọc hẹp lại                         |
-| `User memory limit exceeded` / `Computation timed out`           | AOI quá lớn hoặc `scale` quá nhỏ. Tăng `scale` (ví dụ 60), thu nhỏ AOI, hoặc dùng `Export` để tính ngầm               |
-| Bản đồ trắng / không hiện lớp                                    | Chưa bật lớp trong **Layers**, hoặc lớp `updateMask` không còn điểm nào (mặt nạ toàn 0). Kiểm tra `filterDate` và AOI |
-| Console chỉ hiện `Object`, không thấy số                         | Bấm mũi tên mở rộng. Với `ee.Number` cần đợi vài giây để server tính                                                  |
-| `null` / `Cannot read property ... of null` ở phần GMW           | Năm không có trong GMW v3. Xem danh sách năm bằng `print(GMW.aggregate_array('id_no'))`                               |
-| Diện tích ra `0`                                                 | Mặt nạ rỗng hoặc AOI ngoài vùng có ảnh. Thử `Map.addLayer(A.ndvi)` để xem NDVI                                        |
-| Composite có sọc đen (Landsat 7 sau 2003)                        | Lỗi SLC-off của Landsat 7. Median nhiều cảnh giảm bớt. Nếu năm quan tâm chỉ có ít cảnh, cân nhắc dùng Landsat 5 / 8   |
-| Kết quả mỗi lần Run hơi khác                                     | Ít gặp, do dữ liệu ảnh được cập nhật; với năm hiện tại (chưa đủ mùa), ảnh ghép thay đổi theo ngày                     |
+| `User memory limit exceeded` / `Computation timed out`            | AOI quá lớn, `scale` quá nhỏ, hoặc quá nhiều mốc năm/giai đoạn tính cùng lúc. Tăng `scale` (ví dụ 60), thu nhỏ AOI, giảm số mốc năm khi thử nghiệm, hoặc dùng `Export` để tính ngầm |
+| Bản đồ trắng / không hiện lớp                                     | Chưa bật lớp trong **Layers**, hoặc lớp `updateMask` không còn điểm nào (mặt nạ toàn 0). Kiểm tra `filterDate` và AOI |
+| Console chỉ hiện `Object`, không thấy số                          | Bấm mũi tên mở rộng. Với `ee.Number` cần đợi vài giây để server tính                                                  |
+| `null` / `Cannot read property ... of null` ở phần GMW            | Năm không có trong GMW v3. Xem danh sách năm bằng `print(GMW.aggregate_array('id_no'))`                               |
+| Diện tích ra `0`                                                  | Mặt nạ rỗng hoặc AOI ngoài vùng có ảnh. Thử `Map.addLayer(ndvi)` để xem NDVI của mốc đó                              |
+| Composite có sọc đen (Landsat 7 sau 2003)                         | Lỗi SLC-off của Landsat 7. Median nhiều cảnh giảm bớt. Nếu mốc quan tâm chỉ có ít cảnh, cân nhắc dùng Landsat 5 / 8   |
+| Kết quả mỗi lần Run hơi khác                                      | Ít gặp, do dữ liệu ảnh được cập nhật; với mốc 'nay' (chưa đủ mùa), ảnh ghép thay đổi theo ngày                       |
+| `stratifiedSample` / `randomPoints` chạy rất lâu hoặc trả về ít điểm hơn `numPoints` | Vùng đó có ít điểm ảnh thuộc lớp cần lấy mẫu (ví dụ lớp "mới" rất nhỏ). Giảm `scale`, tăng vùng, hoặc bổ sung điểm thủ công |
+| Vẽ điểm Geometry rồi mất khi Reload trang                          | Phải **Save** script trước khi rời trang; hoặc Export điểm ra Asset (mục 7.2, bước 7) ngay khi vừa vẽ xong           |
 
 ## Phụ lục B. Thuật ngữ
 
 | Thuật ngữ             | Giải thích                                                                                      |
-| --------------------- | ----------------------------------------------------------------------------------------------- |
+| ---------------------- | ------------------------------------------------------------------------------------------------ |
 | AOI                   | Area Of Interest, vùng nghiên cứu                                                               |
+| ROI (vùng lọc)        | Phần của AOI mà phương pháp NDVI được áp dụng (dải ven biển) — xem mục 4.5                       |
 | Band                  | Một kênh phổ của ảnh (đỏ, cận hồng ngoại…)                                                      |
 | Composite (ảnh ghép)  | Ảnh tổng hợp từ nhiều cảnh trong một khoảng thời gian, thường bằng median                       |
+| Mốc năm               | Một năm cụ thể có tính mặt nạ rừng (ví dụ 1988, 1992, …, nay) — khác "giai đoạn" là khoảng giữa 2 mốc |
+| Giai đoạn             | Khoảng giữa 2 mốc năm liên tiếp (ví dụ 2020–nay); mỗi giai đoạn có 1 bản đồ biến động 3 lớp riêng |
 | NDVI                  | Chỉ số thực vật khác biệt chuẩn hoá                                                             |
 | Mặt nạ (mask)         | Ảnh 0/1: 1 = đối tượng cần tìm                                                                  |
 | Overall Accuracy (OA) | Tỷ lệ điểm ảnh phân loại đúng trên tổng số                                                      |
 | Producer's Accuracy   | Trong số điểm ảnh **thật sự là rừng** (theo tham chiếu), bao nhiêu % được tìm ra. Thấp = bỏ sót |
 | User's Accuracy       | Trong số điểm ảnh **mình gán là rừng**, bao nhiêu % đúng là rừng. Thấp = thừa                   |
 | Kappa (κ)             | Mức đồng thuận đã trừ phần trùng hợp ngẫu nhiên. > 0,8 rất tốt; 0,6–0,8 tốt; 0,4–0,6 trung bình |
+| z-score               | Độ lệch của giai đoạn gần nhất so với trung bình lịch sử, chia cho độ lệch chuẩn lịch sử — xem mục 5.4 |
 | GMW                   | Global Mangrove Watch, bản đồ rừng ngập mặn toàn cầu độc lập (radar + quang học)                |
-| Loss / Gain           | Mất rừng / rừng mới giữa hai năm                                                                |
+| Loss / Gain           | Mất rừng / rừng mới giữa hai mốc năm liên tiếp                                                  |
+| Mẫu (sample)          | Điểm đã biết chắc thuộc lớp gì, tự thu thập trên bản đồ — dùng để kiểm chứng hoặc huấn luyện, xem Mục 7 |
+| Ngẫu nhiên phân tầng (stratified sampling) | Rải điểm ngẫu nhiên đều theo từng vùng/lớp, để mẫu không dồn hết vào vùng rộng nhất — xem mục 7.3 |
+| Tách theo khối (spatial block split) | Chia tập huấn luyện/kiểm tra theo vùng địa lý (không theo từng điểm), tránh điểm gần nhau lặp thông tin — xem mục 7.4 |
 
 ## Phụ lục C. Học thêm
 
@@ -825,3 +1028,4 @@ Khi đã quen, chuyển sang bản đầy đủ [gee_code_editor/mangrove_analys
 - Data Catalog: <https://developers.google.com/earth-engine/datasets>
 - Global Mangrove Watch: <https://www.globalmangrovewatch.org>
 - Đối chiếu với code Python của dự án: [GEN03_helper_functions.py](../GEN03_helper_functions.py), [GEN04_mangrove_layers.py](../GEN04_mangrove_layers.py), [MAP05_Validation_RecentChange.ipynb](../MAP05_Validation_RecentChange.ipynb)
+- Kế hoạch triển khai đầy đủ (12 tuần, gồm cả nhánh phân loại có giám sát): [docs/DE_CUONG_12_TUAN_BIEN_DONG_RNM.md](DE_CUONG_12_TUAN_BIEN_DONG_RNM.md)

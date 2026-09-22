@@ -2,9 +2,9 @@
 
 **Dùng cho:** người hướng dẫn kèm một bạn chưa biết gì về GEE / viễn thám, làm việc bán thời gian (khoảng 12–15 giờ mỗi tuần), hoàn thành trong 12 tuần.
 **Tài liệu đi kèm trong repo:**
-- [HUONG_DAN_GEE_BIEN_DONG_RNM.md](HUONG_DAN_GEE_BIEN_DONG_RNM.md): hướng dẫn kỹ thuật 6 mục (gọi tắt là "Hướng dẫn").
-- [bien_dong_rnm_dat_mui.js](../gee_code_editor/bien_dong_rnm_dat_mui.js): script phương pháp nền cho vùng tập Đất Mũi.
-- [mangrove_analysis.js](../gee_code_editor/mangrove_analysis.js): bản JavaScript đa năm cho toàn vùng (dùng để tham khảo cách gộp nhiều mốc).
+- [HUONG_DAN_GEE_BIEN_DONG_RNM.md](HUONG_DAN_GEE_BIEN_DONG_RNM.md): hướng dẫn kỹ thuật 6 mục + Mục 7 mở rộng (gọi tắt là "Hướng dẫn"). Mục 1–6 = nhánh A (nền, NDVI + ROI, chạy sẵn cho cả chuỗi 9 mốc 1988→nay ở vùng tập); Mục 7 = cách tự thu thập điểm mẫu trên bản đồ (thủ công và ngẫu nhiên phân tầng), dùng cho nhánh B.
+- [bien_dong_rnm_dat_mui.js](../gee_code_editor/bien_dong_rnm_dat_mui.js): script phương pháp nền cho vùng tập Đất Mũi — chạy toàn bộ 9 mốc năm (1988–2026), ra 1 bản đồ gộp 3 lớp mỗi giai đoạn, không phải 3 bản đồ tách rời.
+- [mangrove_analysis.js](../gee_code_editor/mangrove_analysis.js): bản JavaScript đa năm cho toàn vùng (cùng 9 mốc, nhưng chưa có ROI và còn theo bảng màu Loss/Gain 9 sắc cũ — xem Hướng dẫn mục 6.7 về việc khớp lại nó với cách làm ở vùng tập).
 - `shapefile_commune/VungNghiencuu.*`: ranh giới 109 xã của dự án.
 
 ---
@@ -14,27 +14,28 @@
 **Tên đề tài:** Đánh giá biến động rừng ngập mặn vùng ven biển Đồng bằng sông Cửu Long (109 xã) giai đoạn 2020–2025 bằng ảnh Sentinel-2 trên Google Earth Engine.
 
 **Câu hỏi nghiên cứu:**
-1. Diện tích rừng ngập mặn toàn vùng, và theo từng tỉnh, tăng hay giảm giữa 2020 và 2025, bao nhiêu ha?
-2. Phần rừng bị mất chuyển thành loại đất nào (nuôi trồng thuỷ sản, nông nghiệp, đô thị, mặt nước)?
-3. Những xã nào biến động mạnh nhất (điểm nóng)?
-4. Cách phân loại có giám sát (Random Forest) cải thiện độ chính xác bao nhiêu so với cách ngưỡng NDVI có giới hạn vùng?
+1. Diện tích rừng ngập mặn toàn vùng, và theo từng tỉnh, biến động thế nào qua từng giai đoạn từ 1988 đến nay — có giai đoạn nào bất thường so với lịch sử (z-score, xem Hướng dẫn mục 5.4)?
+2. Riêng giai đoạn gần nhất (2020 → nay): phần rừng bị mất chuyển thành loại đất nào (nuôi trồng thuỷ sản, nông nghiệp, đô thị, mặt nước)?
+3. Những xã nào biến động mạnh nhất (điểm nóng) ở giai đoạn gần nhất?
+4. Cách phân loại có giám sát (Random Forest, 2 mốc 2020 và nay) cải thiện độ chính xác bao nhiêu so với cách ngưỡng NDVI có giới hạn vùng?
 
 **Phạm vi:**
 - **Vùng nghiên cứu:** 109 xã ven biển ĐBSCL trong `shapefile_commune/VungNghiencuu` (khoảng 10.490 km², 5 mã tỉnh trong shapefile).
-- **Mốc thời gian:** 2020 và 2025, cùng dùng Sentinel-2.
-- **Vùng tập (sandbox):** khung Đất Mũi `[104.72, 8.56, 104.92, 8.74]` (khoảng 22 × 20 km). Dùng ở tuần 1–3 để học nhanh vì chạy trong vài chục giây, sau đó mới chạy toàn vùng.
-- **Tuỳ chọn nếu dư thời gian:** mốc 2015 (Landsat 8); các năm khác trong chuỗi 1988–2026 của repo.
+- **Mốc thời gian:** khác nhau theo nhánh, vì lý do năng lực tính toán (mục 2) và công gán nhãn (tuần 5–6) khác nhau rất nhiều:
+  - **Nhánh A (nền, NDVI + ROI):** toàn bộ chuỗi 9 mốc **1988, 1992, 1997, 2001, 2005, 2010, 2015, 2020, nay** — không cần mẫu, nên làm được cho cả chuỗi lịch sử ngay từ vùng tập (tuần 3), và là phần bắt buộc khi mở rộng toàn ĐBSCL (tuỳ mức độ, xem mục 7 "Rủi ro").
+  - **Nhánh B (Random Forest):** chỉ **2 mốc — 2020 và nay** (không làm cả chuỗi, vì mỗi mốc cần một bộ mẫu gán nhãn riêng và ảnh trước 2015 dùng Landsat với band khác Sentinel-2, tốn công gấp nhiều lần trong 12 tuần).
+- **Vùng tập (sandbox):** khung Đất Mũi `[104.72, 8.56, 104.92, 8.74]` (khoảng 22 × 20 km). Dùng ở tuần 1–3 để học nhanh (script chạy vài phút), sau đó mới chạy toàn vùng.
 
 **Sản phẩm cuối (8 thứ):**
 
 | # | Sản phẩm | Định dạng |
 |---|----------|-----------|
-| 1 | Bản đồ biến động rừng ngập mặn 2020–2025 toàn vùng (ổn định / mất / mới), có chú giải, hướng bắc, tỷ lệ, nguồn dữ liệu | PNG + GeoTIFF |
-| 2 | Bản đồ phân loại lớp phủ 2020 và 2025 (5 lớp) | GeoTIFF (chia theo tỉnh) |
-| 3 | Bảng diện tích (ha) toàn vùng, theo tỉnh và theo xã; ma trận chuyển đổi 5 × 5 | CSV |
-| 4 | Danh sách xã điểm nóng (mất hoặc tăng mạnh nhất) | CSV + hình |
-| 5 | Bảng độ chính xác: OA, Kappa, Producer's / User's, F1 lớp rừng; theo tỉnh; so sánh với Global Mangrove Watch (GMW) | CSV + trong báo cáo |
-| 6 | Bộ điểm mẫu đã gán nhãn cho hai năm và luật gán nhãn | CSV / GEE Asset |
+| 1 | Nhánh A: chuỗi bản đồ biến động 1988→nay toàn vùng (1 bản đồ gộp 3 lớp ổn định/mất/mới mỗi giai đoạn, không tách 3 bản đồ riêng), có chú giải chung, hướng bắc, tỷ lệ, nguồn dữ liệu | PNG + GeoTIFF |
+| 2 | Nhánh B: bản đồ phân loại lớp phủ 2020 và nay (5 lớp) | GeoTIFF (chia theo tỉnh) |
+| 3 | Bảng diện tích (ha) theo mốc năm và theo giai đoạn (toàn vùng, theo tỉnh, theo xã); tỷ lệ % và tốc độ ha/năm mỗi giai đoạn; ma trận chuyển đổi 5 × 5 (giai đoạn 2020→nay) | CSV |
+| 4 | Danh sách xã điểm nóng giai đoạn 2020→nay (mất hoặc tăng mạnh nhất) | CSV + hình |
+| 5 | Bảng độ chính xác: OA, Kappa, Producer's / User's, F1 lớp rừng; theo tỉnh và theo mốc năm (nhánh A cho mọi mốc trùng GMW, nhánh B cho 2020/nay); so sánh với Global Mangrove Watch (GMW) | CSV + trong báo cáo |
+| 6 | Bộ điểm mẫu đã gán nhãn cho 2 mốc (2020, nay) và luật gán nhãn — cách thu thập theo Hướng dẫn Mục 7 | CSV / GEE Asset |
 | 7 | Toàn bộ script GEE, chạy lại được từ đầu | `.js` |
 | 8 | Báo cáo (15–20 trang) và slide bảo vệ | Word / PDF |
 
@@ -65,18 +66,26 @@ Tôi đã đo một số con số trên dữ liệu thật (ngày 21/09/2026) đ
 ## 3. Phương pháp tổng quát
 
 ```
-NHÁNH A (nền, tuần 2–4)                 NHÁNH B (chính, tuần 5–10)
-Ảnh Sentinel-2 sạch mây                 Ảnh Sentinel-2 sạch mây + chỉ số + độ cao
-        │                                        │
-   NDVI > 0,25                           Điểm mẫu tự gán nhãn (5 lớp), rải khắp các tỉnh
-   VÀ trong vùng lọc (ROI)                       │
-        │                                Random Forest (train / test tách theo khối)
-   Bản đồ rừng / không rừng                      │
-        │                                Bản đồ 5 lớp cho 2020 và 2025
-        └────────────── So sánh + kiểm chứng (GMW, điểm mẫu) ──────────────┘
-                                   │
-            Biến động + ma trận chuyển đổi + thống kê theo tỉnh / xã + báo cáo
+NHÁNH A (nền, tuần 2–4)                        NHÁNH B (chính, tuần 5–10)
+Ảnh vệ tinh sạch mây, MỖI mốc 1988→nay          Ảnh Sentinel-2 sạch mây, CHỈ 2020 và nay
+(Landsat 5/7/8 rồi Sentinel-2)                  + chỉ số + độ cao
+        │                                               │
+   NDVI > ngưỡng theo cảm biến                  Điểm mẫu tự thu thập trên bản đồ (5 lớp,
+   VÀ trong vùng lọc (ROI)                      Hướng dẫn Mục 7), rải khắp các tỉnh
+        │                                               │
+   Mặt nạ rừng mỗi mốc năm                       Random Forest (train / test tách theo khối)
+        │                                               │
+   So 2 mốc liên tiếp = 1 bản đồ gộp 3 lớp        Bản đồ 5 lớp cho 2020 và nay
+   /giai đoạn (8 giai đoạn, KHÔNG tách 3
+   bản đồ Coverage/Loss/Gain riêng)
+        │                                               │
+   Tỷ lệ %, tốc độ ha/năm, z-score so lịch sử            │
+        └────────────── So sánh + kiểm chứng (GMW, điểm mẫu), giai đoạn 2020→nay ──────────────┘
+                                        │
+                 Biến động + ma trận chuyển đổi + thống kê theo tỉnh / xã + báo cáo
 ```
+
+**Vì sao hai nhánh khác phạm vi thời gian:** nhánh A không cần mẫu (chỉ cần ngưỡng NDVI + GMW để kiểm chứng), nên "miễn phí" khi mở rộng ra cả chuỗi lịch sử — càng nhiều mốc, càng thấy rõ giai đoạn nào bất thường (z-score, Hướng dẫn mục 5.4). Nhánh B cần mẫu tự gán nhãn cho **từng mốc riêng** (ảnh trước 2015 dùng Landsat, band khác Sentinel-2, không dùng lại được mẫu), nên giữ ở 2 mốc gần nhất để vừa sức 12 tuần.
 
 **Các quyết định thiết kế (đã cân nhắc, không tự ý đổi giữa chừng):**
 - **Cùng cảm biến Sentinel-2 cho cả hai năm**, để tránh biến động giả do đổi vệ tinh.
@@ -118,10 +127,10 @@ du_an/
 1. Tài khoản Earth Engine + Cloud project đã kích hoạt cho người thực hiện.
 2. Thư mục repo, chia sẻ quyền truy cập, tạo cấu trúc thư mục ở trên.
 3. Tải shapefile 109 xã lên GEE Assets của người thực hiện (hoặc chia sẻ asset của bạn).
-4. Ba công cụ mà **repo hiện chưa có** (cần cho tuần 3, 5, 7). Nếu cần, nhờ tôi viết:
-   - Script nền chạy toàn vùng: nhận ranh giới 109 xã làm AOI, có mặt nạ mây SCL, lựa chọn vùng lọc, thống kê theo tỉnh và xã, và chia nhỏ để không quá tải.
-   - Script sinh điểm ngẫu nhiên phân tầng (theo bản đồ nền và theo tỉnh).
-   - Script mẫu Random Forest đã sửa các lỗi thường gặp (chồng lấn tập, band nhiễu, `scale` sai), có xuất kết quả theo tỉnh.
+4. Ba công cụ mà **repo hiện chưa có** (cần cho tuần 3, 5, 7). Hướng dẫn Mục 7 đã có code mẫu cho cách chọn điểm (7.2, 7.3) và tách khối (7.4) ở quy mô vùng tập — mentor cần mở rộng, không phải viết từ đầu. Nếu cần, nhờ tôi viết:
+   - Script nền chạy toàn vùng: nhận ranh giới 109 xã làm AOI, có mặt nạ mây SCL, lựa chọn vùng lọc, thống kê theo tỉnh và xã, và chia nhỏ để không quá tải (mở rộng từ `bien_dong_rnm_dat_mui.js`, phần "Mở rộng ra toàn ĐBSCL" ở Hướng dẫn mục 6.7).
+   - Script sinh điểm ngẫu nhiên phân tầng theo bản đồ nền **và theo tỉnh** (mở rộng `stratifiedSample` ở Hướng dẫn mục 7.3, hiện chỉ phân tầng theo vùng biến động, chưa theo tỉnh).
+   - Script mẫu Random Forest đã sửa các lỗi thường gặp (chồng lấn tập, band nhiễu, `scale` sai), nhận mẫu theo cách thu thập ở Hướng dẫn Mục 7, có xuất kết quả theo tỉnh.
 5. Chốt giờ họp cố định mỗi tuần (45 phút) và kênh hỏi nhanh.
 
 ---
@@ -197,14 +206,14 @@ Cách đọc mỗi tuần dưới đây: **Mục tiêu** (cần đạt), **Việ
 **Mục tiêu:** ra bản đồ biến động đầu tiên, và thấy tận mắt vì sao NDVI đơn thuần không đủ khi vùng rộng.
 
 **Việc làm:**
-- Đọc Hướng dẫn **Mục 4** (NDVI, ngưỡng) và **Mục 5** (mất / mới / ổn định).
-- **Vùng tập (khoảng 2 ngày):** chạy [bien_dong_rnm_dat_mui.js](../gee_code_editor/bien_dong_rnm_dat_mui.js) nguyên bản, đọc từng phần, chú thích tiếng Việt vào file của mình. Tự viết lại phần "mất / mới / ổn định" từ đầu (không nhìn file).
-- **Toàn vùng (khoảng 2 ngày, mentor chạy cùng):** đổi AOI sang 109 xã, chạy NDVI > 0,25 cho 2020. So diện tích với GMW 2020 và **ghi lại con số** (tham chiếu: khoảng 655.000 ha so với khoảng 101.000 ha, đo ở 100 m). Chụp ảnh những nơi "rừng" thực ra là ruộng hoặc vườn.
+- Đọc Hướng dẫn **Mục 4** (NDVI, ngưỡng) và **Mục 5** (mất / mới / ổn định, áp dụng cho mỗi giai đoạn).
+- **Vùng tập (khoảng 2 ngày):** chạy [bien_dong_rnm_dat_mui.js](../gee_code_editor/bien_dong_rnm_dat_mui.js) nguyên bản — script này giờ chạy **cả 9 mốc năm (1988→nay)**, không chỉ 2 năm, và ra 8 bản đồ biến động (1 mỗi giai đoạn, dùng chung 1 chú giải 3 lớp) cùng bảng tốc độ ha/năm theo giai đoạn. Đọc từng phần, chú thích tiếng Việt vào file của mình. Tự viết lại phần "mất / mới / ổn định" của **1 giai đoạn** từ đầu (không nhìn file).
+- **Toàn vùng (khoảng 2 ngày, mentor chạy cùng):** đổi AOI sang 109 xã, chạy NDVI > 0,25 cho **năm 2020 duy nhất** (chưa cần chạy cả chuỗi ở quy mô này, tốn tài nguyên hơn nhiều). So diện tích với GMW 2020 và **ghi lại con số** (tham chiếu: khoảng 655.000 ha so với khoảng 101.000 ha, đo ở 100 m). Chụp ảnh những nơi "rừng" thực ra là ruộng hoặc vườn.
 - Ghi lại thời gian chạy và các lỗi hạn mức, nếu có.
 
-**Nộp cuối tuần:** bản đồ nền vùng tập, bảng diện tích, script tự viết, bảng "NDVI toàn vùng so với GMW" kèm ảnh minh hoạ ít nhất 3 nơi nhầm.
+**Nộp cuối tuần:** chuỗi 8 bản đồ nền vùng tập (1988→nay), bảng diện tích theo mốc và theo giai đoạn, script tự viết cho 1 giai đoạn, bảng "NDVI toàn vùng 2020 so với GMW" kèm ảnh minh hoạ ít nhất 3 nơi nhầm.
 
-**Đạt khi:** số liệu vùng tập gần với Hướng dẫn mục 6.3 (cho phép lệch nhỏ vì dữ liệu GEE cập nhật); giải thích được vì sao diện tích toàn vùng gấp nhiều lần GMW.
+**Đạt khi:** số liệu vùng tập gần với Hướng dẫn mục 6.3 (cho phép lệch nhỏ vì dữ liệu GEE cập nhật); giải thích được vì sao diện tích toàn vùng gấp nhiều lần GMW; giải thích được vì sao 2 mốc 1992 và 2001 trong bảng vùng tập có số cảnh rất thấp và cần đọc kết quả quanh chúng thận trọng hơn.
 
 **Hỏi kiểm tra hiểu:** "Điểm ảnh nào được tô màu tím hồng, vì sao?" và "NDVI cao ở ruộng lúa khác NDVI cao ở rừng ngập mặn thế nào, hay chúng giống nhau?"
 
@@ -240,21 +249,25 @@ Cách đọc mỗi tuần dưới đây: **Mục tiêu** (cần đạt), **Việ
 **Mục tiêu:** thống nhất hệ lớp và luật gán nhãn; người thực hiện gán nhãn ổn định.
 
 **Việc làm:**
-- Viết **luật gán nhãn 1 trang** cho 5 lớp:
+- Đọc Hướng dẫn **Mục 7** (toàn bộ): đây trả lời trực tiếp "mẫu lấy ở đâu, bằng cách nào" — có, mẫu **phải tự thu thập** (GMW không có điểm mẫu, không phân biệt 5 lớp), và có, cách chuẩn là **chọn điểm ngay trên bản đồ GEE**, nhìn ảnh vệ tinh trực tiếp trong Code Editor (mục 7.2), kết hợp vị trí ngẫu nhiên phân tầng để đỡ thiên vị (mục 7.3).
+- Viết **luật gán nhãn 1 trang** cho 5 lớp (theo khung ở Hướng dẫn mục 7.1):
   1. Rừng ngập mặn
   2. Mặt nước (sông, biển, kênh)
   3. Nuôi trồng thuỷ sản (ao tôm)
   4. Nông nghiệp và cây trồng khác
   5. Đô thị và đất trống
-- Với mỗi lớp: mô tả ảnh màu thật trông thế nào, ví dụ điển hình và trường hợp "khó" (rừng xen ao tôm; đất ngập nước nông; bờ đê có cây). Quy ước xử lý điểm lai: **không lấy** điểm nằm ở ranh giới hoặc lai lẫn.
-- Thiết kế mẫu: sinh điểm ngẫu nhiên **phân tầng theo tỉnh và theo bản đồ nền** (rừng ổn định, mất, mới, không rừng ổn định) bằng script mentor cung cấp. Mỗi tỉnh phải có điểm.
-- Gán nhãn thử 30 điểm cho cả hai năm; mentor gán lại cùng 30 điểm độc lập.
+- Với mỗi lớp: mô tả ảnh màu thật trông thế nào, ví dụ điển hình và trường hợp "khó" (rừng xen ao tôm; đất ngập nước nông; bờ đê có cây). Quy ước xử lý điểm lai: **không lấy** điểm nằm ở ranh giới hoặc lai lẫn (Hướng dẫn mục 7.2, "Quy tắc khi bấm điểm thủ công").
+- Thiết kế mẫu theo **cả 2 cách** của Hướng dẫn Mục 7, không chỉ 1 cách:
+  - **Ngẫu nhiên phân tầng** (mục 7.3) làm khung chính: sinh điểm phân tầng theo bản đồ nền (rừng ổn định, mất, mới, không rừng ổn định) **và theo tỉnh** — dùng script mentor mở rộng từ ví dụ `stratifiedSample` trong Hướng dẫn.
+  - **Thủ công** (mục 7.2) để bổ sung cho lớp hiếm (ví dụ ao tôm nhỏ, rải rác) mà mẫu ngẫu nhiên ít rơi vào.
+  - Mỗi tỉnh phải có điểm.
+- Gán nhãn thử 30 điểm cho cả hai mốc (2020, nay); mentor gán lại cùng 30 điểm độc lập.
 
-**Nộp cuối tuần:** luật gán nhãn; 30 điểm đã gán nhãn kèm nhận xét khó khăn.
+**Nộp cuối tuần:** luật gán nhãn; 30 điểm đã gán nhãn (ghi rõ điểm nào lấy theo cách nào — thủ công hay ngẫu nhiên phân tầng) kèm nhận xét khó khăn.
 
-**Đạt khi:** mức đồng thuận giữa hai người gán nhãn trên 30 điểm thử tốt (mục tiêu: đồng ý trên 80% số điểm). Phần không đồng ý được dùng để sửa luật.
+**Đạt khi:** mức đồng thuận giữa hai người gán nhãn trên 30 điểm thử tốt (mục tiêu: đồng ý trên 80% số điểm). Phần không đồng ý được dùng để sửa luật. Giải thích được vì sao dùng cả 2 cách chọn mẫu, không chỉ 1 cách.
 
-**Hỏi kiểm tra hiểu:** "Vì sao không lấy điểm ở ranh giới?" và "Vì sao mẫu phải rải khắp các tỉnh thay vì lấy nơi dễ nhận ra?"
+**Hỏi kiểm tra hiểu:** "Vì sao không lấy điểm ở ranh giới?" và "Ngẫu nhiên phân tầng khác gì với việc bạn tự chọn nơi 'dễ nhìn'?"
 
 ---
 
@@ -283,7 +296,7 @@ Cách đọc mỗi tuần dưới đây: **Mục tiêu** (cần đạt), **Việ
 **Việc làm:**
 - Đọc lại phần Random Forest trong code mẫu (mentor cung cấp).
 - Chuẩn bị biến đầu vào: `B2, B3, B4, B8` (Sentinel-2: xanh dương, xanh lá, đỏ, cận hồng ngoại), `B11`, `NDVI`, `NDMI` (độ ẩm), độ cao, độ dốc. **Không** đưa band chất lượng hay góc chụp vào.
-- Tách mẫu huấn luyện / kiểm tra **theo khối 10 × 10 km** (khoảng 70 / 30). Tập kiểm tra để dành, chưa đụng đến.
+- Tách mẫu huấn luyện / kiểm tra **theo khối 10 × 10 km** (khoảng 70 / 30), theo đúng cách ở Hướng dẫn mục 7.4 (gán mỗi điểm 1 mã khối rồi chia khối, không chia từng điểm). Tập kiểm tra để dành, chưa đụng đến.
 - Huấn luyện, xem tầm quan trọng của biến (`explain()`), chỉnh số cây bằng sai số out-of-bag. Đặt `seed` để chạy lại ra cùng kết quả.
 - **Phân loại toàn vùng theo từng tỉnh** và xuất từng tỉnh ra Assets hoặc Drive, thay vì tính một lần cho cả vùng.
 
@@ -465,6 +478,7 @@ Cách đọc mỗi tuần dưới đây: **Mục tiêu** (cần đạt), **Việ
 | Kappa | Độ đồng thuận đã trừ phần trùng ngẫu nhiên |
 | Ma trận chuyển đổi | Bảng diện tích chuyển từ lớp này sang lớp khác giữa hai thời điểm |
 | Tile scale | Tham số của GEE để chia nhỏ tính toán, giảm lỗi hết bộ nhớ |
+| Mẫu (sample), ngẫu nhiên phân tầng | Điểm tự thu thập trên bản đồ để kiểm chứng hoặc huấn luyện — cách chọn thủ công và ngẫu nhiên phân tầng: xem Hướng dẫn Mục 7 |
 
 ### Tài liệu tham khảo gợi ý
 
