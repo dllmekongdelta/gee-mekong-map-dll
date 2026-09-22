@@ -228,14 +228,36 @@ var AOI = ee.Geometry.Rectangle([104.72, 8.56, 104.92, 8.74]);
 
 > **Lời khuyên chọn AOI rất quan trọng cho độ chính xác:** NDVI chỉ cho biết "có thực vật xanh", chứ không phân biệt được rừng ngập mặn với lúa, cây trồng, bờ ao tôm có cây… Vì vậy AOI nên là **dải ven biển có rừng ngập mặn chiếm ưu thế**, đừng lấy khung quá rộng vào sâu nội địa. Mục 6 có số liệu chứng minh điều này.
 
-### 2.5 Tải shapefile lên Assets (tuỳ chọn: ranh giới xã)
+### 2.5 Tải shapefile lên Assets (tuỳ chọn: ranh giới hành chính)
 
-Code Editor không đọc được file `.shp` trên máy bạn. Phải tải lên trước:
+Code Editor không đọc được file `.shp` trên máy bạn. Phải tải lên trước. Repo có 2 bộ ranh giới sẵn, tuỳ mục đích:
+
+| Shapefile | Nội dung | Dùng khi |
+| --------- | -------- | -------- |
+| `shapefile_dbscl/DBSCL_5Tinh_2025.shp` | 5 tỉnh/thành ĐBSCL theo ranh giới hành chính mới (từ 01/07/2025): Đồng Tháp, An Giang, Vĩnh Long, Cần Thơ, Cà Mau | Làm AOI cho **toàn vùng ĐBSCL** (mục 6.7) |
+| `shapefile_commune/VungNghiencuu.*` | 109 xã ven biển (bộ dữ liệu cũ, hẹp hơn nhiều so với 5 tỉnh) | Thống kê chi tiết theo xã trong dải ven biển (mục 6.7, MAP05) |
 
 1. Khung **Assets** → **NEW** → **Shape files**.
-2. Chọn cùng lúc các file `.shp`, `.shx`, `.dbf`, `.prj` (và `.cpg` nếu có) trong `shapefile_commune/`.
-3. Đặt tên asset (ví dụ `VungNghiencuu`), bấm **Upload**, theo dõi ở tab **Tasks** đến khi xong.
-4. Bấm vào asset → sao chép **Asset ID** (dạng `projects/<project-của-bạn>/assets/VungNghiencuu`; tài khoản cũ có thể là `users/<tên>/VungNghiencuu`).
+2. Chọn cùng lúc các file `.shp`, `.shx`, `.dbf`, `.prj` (và `.cpg` nếu có) của bộ bạn cần, ví dụ trong `shapefile_dbscl/`.
+3. Đặt tên asset (ví dụ `DBSCL_5Tinh_2025`), bấm **Upload**, theo dõi ở tab **Tasks** đến khi xong.
+4. Bấm vào asset → sao chép **Asset ID** (dạng `projects/<project-của-bạn>/assets/DBSCL_5Tinh_2025`; tài khoản cũ có thể là `users/<tên>/DBSCL_5Tinh_2025`).
+
+```javascript
+var tinhDbscl = ee.FeatureCollection(
+  "projects/<project-của-bạn>/assets/DBSCL_5Tinh_2025"
+);
+print("Số tỉnh:", tinhDbscl.size());       // phải ra 5
+print(tinhDbscl.first());                  // xem tên cột: maTinh, tenTinh, dienTich, danSo...
+Map.addLayer(
+  tinhDbscl.style({ color: "008B8B", fillColor: "00000000", width: 2 }),
+  {},
+  "5 tỉnh ĐBSCL"
+);
+```
+
+> **Lưu ý:** Đồng Tháp và An Giang không có bờ biển / không có rừng ngập mặn (giáp Campuchia). Dùng cả 5 tỉnh làm AOI vẫn đúng — vùng lọc (ROI, mục 4.5) sẽ tự cho ra diện tích rừng ≈ 0 ở hai tỉnh này — nhưng khối lượng tính toán sẽ lớn hơn nhiều so với chỉ 3 tỉnh ven biển (Vĩnh Long, Cần Thơ, Cà Mau).
+
+Nếu cần thống kê chi tiết hơn theo xã trong dải ven biển, tải thêm bộ 109 xã (làm tương tự, đổi tên asset):
 
 ```javascript
 var xa = ee.FeatureCollection(
@@ -833,12 +855,13 @@ Khi ghi vào báo cáo, nên nêu rõ:
 
 Khi đã quen, chuyển sang bản đầy đủ [gee_code_editor/mangrove_analysis.js](../gee_code_editor/mangrove_analysis.js): đa giác AOI 974 đỉnh, 9 mốc năm (1988–2026), 8 giai đoạn. Việc cần thêm để có độ tin cậy như MAP05 **và** khớp với cách gộp 3 lớp + ROI của mục 5–6:
 
-- File này hiện **chưa có ROI riêng** — đa giác 974 đỉnh đã tự đóng vai trò như một `ROI_POLYGON` vẽ tay rất chi tiết cho toàn ĐBSCL, nên có thể giữ nguyên logic đó, chỉ cần thêm mặt nạ mây SCL (mục 3.5) cho Sentinel-2.
+- **Đổi AOI sang `shapefile_dbscl/DBSCL_5Tinh_2025.shp`** (5 tỉnh ĐBSCL theo ranh giới hành chính mới — mục 2.5), thay cho đa giác 974 đỉnh vẽ tay (đa giác cũ chỉ là dải ven biển hẹp, không phải toàn ĐBSCL). Vẫn giữ đa giác 974 đỉnh làm **ROI** (`ROI_POLYGON`, mục 4.5) bên trong AOI 5 tỉnh này, hoặc dùng `MAX_DIST_SEA_KM` — không dùng thẳng NDVI trên cả 5 tỉnh mà không giới hạn vùng.
+- File này hiện **chưa có mặt nạ mây theo điểm ảnh** cho Sentinel-2 — thêm mục 3.5 (mặt nạ SCL) trước khi dùng cho các mốc 2020 trở đi.
 - Vẫn dùng bảng màu Loss/Gain 9 sắc riêng (2 lớp mỗi giai đoạn) thay vì 1 bản đồ gộp 3 lớp/giai đoạn. Muốn khớp với cách làm ở mục 5–6, đổi sang đúng logic `ee.Image(0).where(...)` như mục 5.1, dùng lại 1 chú giải 3 màu cho toàn bộ 8 giai đoạn.
-- Tính diện tích từng mốc và từng giai đoạn (mục 5.2–5.4) bằng `reduceRegion`; với vùng lớn, tăng `scale` hoặc chia nhỏ theo tỉnh để không vượt giới hạn bộ nhớ.
+- Tính diện tích từng mốc và từng giai đoạn (mục 5.2–5.4) bằng `reduceRegion`; với vùng lớn (nhất là khi AOI là cả 5 tỉnh), tăng `scale`, chia nhỏ theo tỉnh, hoặc lọc `.filter(ee.Filter.eq('maTinh', ...))` trên `tinhDbscl` để tính từng tỉnh một, để không vượt giới hạn bộ nhớ.
 - So sánh với GMW cho 1997 (dùng GMW 1996), 2010, 2015, 2020 (mục 6.3).
-- Thống kê theo xã bằng `reduceRegions` trên tài sản shapefile xã (mục 2.5).
-- Đây chính là "nhánh A" của [đề cương 12 tuần](DE_CUONG_12_TUAN_BIEN_DONG_RNM.md) khi mở rộng sang toàn vùng 109 xã. Nhánh B (phân loại nhiều lớp) cần mẫu — xem Mục 7.
+- Thống kê theo xã (dải ven biển) bằng `reduceRegions` trên tài sản shapefile 109 xã (mục 2.5); thống kê theo tỉnh bằng `reduceRegions` trên `tinhDbscl`.
+- Đây chính là "nhánh A" của [đề cương 12 tuần](DE_CUONG_12_TUAN_BIEN_DONG_RNM.md) khi mở rộng sang toàn vùng 5 tỉnh ĐBSCL. Nhánh B (phân loại nhiều lớp) cần mẫu — xem Mục 7.
 
 ---
 
@@ -1028,4 +1051,5 @@ var khoiNgauNhien = ee.FeatureCollection(mauCoKhoi.aggregate_array('khoi').disti
 - Data Catalog: <https://developers.google.com/earth-engine/datasets>
 - Global Mangrove Watch: <https://www.globalmangrovewatch.org>
 - Đối chiếu với code Python của dự án: [GEN03_helper_functions.py](../GEN03_helper_functions.py), [GEN04_mangrove_layers.py](../GEN04_mangrove_layers.py), [MAP05_Validation_RecentChange.ipynb](../MAP05_Validation_RecentChange.ipynb)
+- Ranh giới hành chính dùng làm AOI toàn vùng: [shapefile_dbscl/DBSCL_5Tinh_2025.shp](../shapefile_dbscl/DBSCL_5Tinh_2025.shp) (5 tỉnh ĐBSCL mới) và [shapefile_commune/VungNghiencuu.*](../shapefile_commune) (109 xã ven biển, cho thống kê chi tiết)
 - Kế hoạch triển khai đầy đủ (12 tuần, gồm cả nhánh phân loại có giám sát): [docs/DE_CUONG_12_TUAN_BIEN_DONG_RNM.md](DE_CUONG_12_TUAN_BIEN_DONG_RNM.md)

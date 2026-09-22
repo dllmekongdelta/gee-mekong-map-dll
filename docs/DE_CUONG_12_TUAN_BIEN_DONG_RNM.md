@@ -5,7 +5,8 @@
 - [HUONG_DAN_GEE_BIEN_DONG_RNM.md](HUONG_DAN_GEE_BIEN_DONG_RNM.md): hướng dẫn kỹ thuật 6 mục + Mục 7 mở rộng (gọi tắt là "Hướng dẫn"). Mục 1–6 = nhánh A (nền, NDVI + ROI, chạy sẵn cho cả chuỗi 9 mốc 1988→nay ở vùng tập); Mục 7 = cách tự thu thập điểm mẫu trên bản đồ (thủ công và ngẫu nhiên phân tầng), dùng cho nhánh B.
 - [bien_dong_rnm_dat_mui.js](../gee_code_editor/bien_dong_rnm_dat_mui.js): script phương pháp nền cho vùng tập Đất Mũi — chạy toàn bộ 9 mốc năm (1988–2026), ra 1 bản đồ gộp 3 lớp mỗi giai đoạn, không phải 3 bản đồ tách rời.
 - [mangrove_analysis.js](../gee_code_editor/mangrove_analysis.js): bản JavaScript đa năm cho toàn vùng (cùng 9 mốc, nhưng chưa có ROI và còn theo bảng màu Loss/Gain 9 sắc cũ — xem Hướng dẫn mục 6.7 về việc khớp lại nó với cách làm ở vùng tập).
-- `shapefile_commune/VungNghiencuu.*`: ranh giới 109 xã của dự án.
+- [shapefile_dbscl/DBSCL_5Tinh_2025.shp](../shapefile_dbscl/DBSCL_5Tinh_2025.shp): ranh giới **5 tỉnh/thành phố** thuộc vùng ĐBSCL theo cơ cấu hành chính mới (từ 01/07/2025) — Đồng Tháp, An Giang, Vĩnh Long, Cần Thơ, Cà Mau. **Đây là AOI chính của đề cương này**, thay cho 109 xã ở bản trước.
+- `shapefile_commune/VungNghiencuu.*`: ranh giới 109 xã **ven biển** (bộ dữ liệu cũ, không phải toàn bộ 5 tỉnh) — vẫn có thể dùng để thống kê chi tiết theo xã trong dải ven biển, nhưng kiểm tra lại thuộc tính `ten_tinh`/`ma_tinh` trước khi dùng (đã phát hiện lỗi mã hoá tiếng Việt và có dấu hiệu gán nhãn tỉnh sai ở một số dòng).
 
 ---
 
@@ -20,7 +21,8 @@
 4. Cách phân loại có giám sát (Random Forest, 2 mốc 2020 và nay) cải thiện độ chính xác bao nhiêu so với cách ngưỡng NDVI có giới hạn vùng?
 
 **Phạm vi:**
-- **Vùng nghiên cứu:** 109 xã ven biển ĐBSCL trong `shapefile_commune/VungNghiencuu` (khoảng 10.490 km², 5 mã tỉnh trong shapefile).
+- **Vùng nghiên cứu:** toàn bộ **5 tỉnh/thành phố ĐBSCL** theo ranh giới hành chính mới (từ 01/07/2025, Nghị quyết 306/NQ-CP): **Đồng Tháp, An Giang, Vĩnh Long, Cần Thơ, Cà Mau** — trong `shapefile_dbscl/DBSCL_5Tinh_2025.shp` (khoảng 36.427 km², dân số ~20,4 triệu). Đây là **toàn bộ đồng bằng**, không chỉ dải ven biển như bộ 109 xã ở bản đề cương trước.
+  > **Lưu ý quan trọng:** Đồng Tháp và An Giang **không có bờ biển và không có rừng ngập mặn** (giáp Campuchia, phía trên đồng bằng). Với nhánh A (NDVI + ROI), vùng lọc "cách biển ≤ X km" (Hướng dẫn mục 4.5) sẽ tự động cho ra diện tích rừng ≈ 0 ở hai tỉnh này — không cần loại tay, nhưng vẫn tốn tài nguyên tính toán vì AOI tổng thể lớn hơn nhiều so với chỉ 3 tỉnh ven biển (Vĩnh Long, Cần Thơ, Cà Mau). Nếu thời gian gấp, có thể ưu tiên chạy 3 tỉnh ven biển trước (xem mục 7 "Rủi ro").
 - **Mốc thời gian:** khác nhau theo nhánh, vì lý do năng lực tính toán (mục 2) và công gán nhãn (tuần 5–6) khác nhau rất nhiều:
   - **Nhánh A (nền, NDVI + ROI):** toàn bộ chuỗi 9 mốc **1988, 1992, 1997, 2001, 2005, 2010, 2015, 2020, nay** — không cần mẫu, nên làm được cho cả chuỗi lịch sử ngay từ vùng tập (tuần 3), và là phần bắt buộc khi mở rộng toàn ĐBSCL (tuỳ mức độ, xem mục 7 "Rủi ro").
   - **Nhánh B (Random Forest):** chỉ **2 mốc — 2020 và nay** (không làm cả chuỗi, vì mỗi mốc cần một bộ mẫu gán nhãn riêng và ảnh trước 2015 dùng Landsat với band khác Sentinel-2, tốn công gấp nhiều lần trong 12 tuần).
@@ -45,15 +47,15 @@
 
 ## 2. Vì sao phạm vi ĐBSCL làm đề tài khó hơn
 
-Tôi đã đo một số con số trên dữ liệu thật (ngày 21/09/2026) để bạn biết trước điều gì sẽ xảy ra:
+Tôi đã đo một số con số trên dữ liệu thật (ngày 21/09/2026), khi đó đang thử trên bộ 109 xã ven biển (bản đề cương trước, chưa đổi sang 5 tỉnh mới). Kết luận vẫn đúng và thậm chí đúng hơn cho phạm vi 5 tỉnh hiện tại (vì thêm cả vùng nội địa Đồng Tháp/An Giang không hề có rừng ngập mặn), nhưng **con số cụ thể (655.000 ha, 101.000 ha...) chưa được đo lại trên `shapefile_dbscl` — cần làm lại ở tuần 3–4 với AOI mới**:
 
-| Phép đo | Kết quả | Ý nghĩa cho đề tài |
+| Phép đo (trên 109 xã, số cũ) | Kết quả | Ý nghĩa cho đề tài |
 |---------|---------|--------------------|
-| Diện tích "rừng" khi chỉ dùng NDVI > 0,25 trên cả 109 xã (2020, đã loại mây theo điểm ảnh, đo ở độ phân giải 100 m) | Khoảng **655.000 ha** | GMW 2020 trong cùng vùng chỉ khoảng **101.000 ha**. NDVI đơn thuần cho gấp hơn 6 lần: **không dùng được** nếu không giới hạn vùng hoặc không phân loại có giám sát |
+| Diện tích "rừng" khi chỉ dùng NDVI > 0,25 trên cả 109 xã (2020, đã loại mây theo điểm ảnh, đo ở độ phân giải 100 m) | Khoảng **655.000 ha** | GMW 2020 trong cùng vùng chỉ khoảng **101.000 ha**. NDVI đơn thuần cho gấp hơn 6 lần: **không dùng được** nếu không giới hạn vùng hoặc không phân loại có giám sát. Trên 5 tỉnh mới (rộng hơn, thêm cả An Giang/Đồng Tháp nội địa), tỷ lệ sai lệch này dự kiến còn lớn hơn |
 | Đa giác dải ven biển vẽ tay của repo (974 đỉnh) | 10.413 km²; chứa khoảng 34.200 ha rừng GMW | Đây là cách mà code Python trước đây tránh lẫn nông nghiệp |
 | Phần đa giác dải nằm trong 109 xã | Chứa khoảng 31.800 ha rừng GMW, chỉ khoảng **31%** rừng GMW của 109 xã | Đa giác dải bỏ sót phần lớn rừng nằm ngoài dải. Nếu dùng làm vùng lọc thì phải nêu rõ điều này |
-| Số cảnh Sentinel-2 mỗi năm phủ vùng, mây < 60% | Khoảng 320–360 cảnh (đo trên 109 xã và trên đa giác dải, năm 2020 và 2025) | Khối lượng lớn hơn nhiều so với vùng tập (29–33 cảnh) |
-| Tính diện tích tương tác toàn vùng ở 100 m | Chạy được trong khoảng 14 giây | Tính ở độ phân giải 30 m toàn vùng **chưa thử**: dự kiến phải chia theo tỉnh hoặc xuất (Export) |
+| Số cảnh Sentinel-2 mỗi năm phủ vùng, mây < 60% | Khoảng 320–360 cảnh (đo trên 109 xã và trên đa giác dải, năm 2020 và 2025) | Trên 5 tỉnh mới (36.427 km², gấp gần 3,5 lần 109 xã) khối lượng còn lớn hơn nữa |
+| Tính diện tích tương tác toàn vùng ở 100 m | Chạy được trong khoảng 14 giây (trên 109 xã) | Tính ở độ phân giải 30 m toàn vùng **chưa thử**, và **chưa thử trên diện tích 5 tỉnh** (lớn hơn nhiều): dự kiến phải chia theo tỉnh hoặc xuất (Export), có thể cần bắt đầu từ 3 tỉnh ven biển trước |
 
 **Hệ quả cho kế hoạch:**
 1. **Nhánh B (Random Forest) trở thành trung tâm**, không còn là phần nâng cao. Với vùng có cả rừng, ao tôm, lúa, đô thị, phân loại đa lớp là cách tách chúng có cơ sở nhất.
@@ -106,7 +108,7 @@ NHÁNH A (nền, tuần 2–4)                        NHÁNH B (chính, tuần 5
 | Ảnh chính | `COPERNICUS/S2_SR_HARMONIZED` (Sentinel-2, 10 m) |
 | Ảnh phụ (tuỳ chọn) | `LANDSAT/LC08/C02/T1_L2` cho mốc 2015 |
 | Tham chiếu độc lập | `projects/sat-io/open-datasets/GMW/extent/GMW_V3` (Global Mangrove Watch, đến 2020) |
-| Ranh giới vùng | `shapefile_commune/VungNghiencuu.*` (tải lên GEE Assets, xem Hướng dẫn mục 2.5) |
+| Ranh giới vùng | `shapefile_dbscl/DBSCL_5Tinh_2025.shp` — 5 tỉnh mới (AOI chính); `shapefile_commune/VungNghiencuu.*` — 109 xã ven biển (tuỳ chọn, thống kê chi tiết). Cả hai tải lên GEE Assets, xem Hướng dẫn mục 2.5 |
 | Biến phụ trợ | Nước lâu năm `JRC/GSW1_4/GlobalSurfaceWater`; độ cao `JAXA/ALOS/AW3D30/V3_2` (nếu không có, dùng `V2_2`) |
 | Ảnh nền để gán nhãn | Bản đồ "Satellite" của Code Editor, Sentinel-2 màu thật của từng năm |
 | Đọc / ghi | VS Code (soạn script và báo cáo), Google Sheets hoặc CSV (nhật ký, mẫu) |
@@ -126,7 +128,7 @@ du_an/
 **Mentor cần chuẩn bị trước tuần 1** (tuần 0, khoảng 4–6 giờ):
 1. Tài khoản Earth Engine + Cloud project đã kích hoạt cho người thực hiện.
 2. Thư mục repo, chia sẻ quyền truy cập, tạo cấu trúc thư mục ở trên.
-3. Tải shapefile 109 xã lên GEE Assets của người thực hiện (hoặc chia sẻ asset của bạn).
+3. Tải `shapefile_dbscl/DBSCL_5Tinh_2025.shp` (5 tỉnh, AOI chính) và `shapefile_commune/VungNghiencuu.*` (109 xã, tuỳ chọn) lên GEE Assets của người thực hiện (hoặc chia sẻ asset của bạn).
 4. Ba công cụ mà **repo hiện chưa có** (cần cho tuần 3, 5, 7). Hướng dẫn Mục 7 đã có code mẫu cho cách chọn điểm (7.2, 7.3) và tách khối (7.4) ở quy mô vùng tập — mentor cần mở rộng, không phải viết từ đầu. Nếu cần, nhờ tôi viết:
    - Script nền chạy toàn vùng: nhận ranh giới 109 xã làm AOI, có mặt nạ mây SCL, lựa chọn vùng lọc, thống kê theo tỉnh và xã, và chia nhỏ để không quá tải (mở rộng từ `bien_dong_rnm_dat_mui.js`, phần "Mở rộng ra toàn ĐBSCL" ở Hướng dẫn mục 6.7).
    - Script sinh điểm ngẫu nhiên phân tầng theo bản đồ nền **và theo tỉnh** (mở rộng `stratifiedSample` ở Hướng dẫn mục 7.3, hiện chỉ phân tầng theo vùng biến động, chưa theo tỉnh).
@@ -139,22 +141,24 @@ du_an/
 
 ### Tổng quan
 
-| Tuần | Chủ đề | Sản phẩm chính cuối tuần | Mốc |
-|------|--------|--------------------------|-----|
-| 1 | Làm quen GEE và JavaScript (vùng tập) | Script Hello + 5 bài tập | |
-| 2 | Dữ liệu ảnh và loại mây (vùng tập) | Bảng so sánh 3 cách lọc mây | |
-| 3 | NDVI, phương pháp nền: vùng tập rồi toàn vùng | Bản đồ nền vùng tập + số liệu toàn vùng | |
-| 4 | Chọn vùng lọc, đánh giá phương pháp nền, đọc tài liệu | Báo cáo ngắn 2 trang | **Mốc 1** |
-| 5 | Thiết kế hệ phân loại, học gán nhãn | Luật gán nhãn + 30 điểm mẫu thử | |
-| 6 | Lập bộ điểm mẫu (khoảng 800 điểm, rải khắp các tỉnh) | Bộ điểm mẫu hoàn chỉnh | |
-| 7 | Random Forest cho 2020 | Bản đồ 5 lớp 2020 + độ chính xác | |
-| 8 | Random Forest cho 2025, so sánh hai nhánh | Bản đồ 2025 + bảng so sánh | **Mốc 2** |
-| 9 | Biến động, ma trận chuyển đổi, thống kê theo tỉnh và xã | Bản đồ biến động cuối + xã điểm nóng | |
-| 10 | Đánh giá độ chính xác cuối (kể cả theo tỉnh) | Bảng độ chính xác + thảo luận sai số | |
-| 11 | Bản đồ chuẩn và bản nháp báo cáo | Bản nháp đầy đủ | |
-| 12 | Hoàn thiện, kiểm tra tái lập, bảo vệ thử | Gói nộp cuối | **Mốc 3** |
+> Cột **Thời gian** ghi số tuần và số giờ dự kiến; điền thêm ngày lịch cụ thể khi đã chốt ngày bắt đầu. Mốc nghiệm thu (Mốc 1/2/3) được gộp vào cột **Kết quả** của tuần đó.
 
-Cách đọc mỗi tuần dưới đây: **Mục tiêu** (cần đạt), **Việc làm**, **Nộp cuối tuần**, **Đạt khi** (tiêu chí nghiệm thu), **Hỏi kiểm tra hiểu** (2 câu bạn hỏi để biết người thực hiện hiểu hay chỉ chép code).
+| Tuần | Thời gian | Mục tiêu công việc | Kết quả |
+|------|-----------|---------------------|---------|
+| 1 | Tuần 1 (~12–15 giờ) | - Đăng nhập Google Earth Engine Code Editor, làm quen JavaScript cơ bản của GEE (biến, hàm, `ee.Image`, `ee.ImageCollection`...).<br>- Đọc Hướng dẫn Mục 1–2; chạy script "Hello GEE"; làm 5 bài tập nhỏ (đổi vùng, đổi năm, vẽ AOI, hiển thị NDVI...). | - Tự chạy lại được 5 script không cần nhìn hướng dẫn; đọc và sửa được lỗi đỏ trong Console.<br>- Nộp: 5 script, ảnh chụp minh chứng, nhật ký tuần 1. |
+| 2 | Tuần 2 (~12–15 giờ) | - Đọc Hướng dẫn Mục 3 (lọc mây, ảnh ghép theo năm).<br>- Trên vùng tập, tạo ảnh ghép median 2020 và 2025 theo 3 cách lọc mây (không lọc / lọc % mây / lọc + mặt nạ SCL); thử mở rộng cách tốt nhất sang toàn vùng. | - Bảng số cảnh 3 cách × 2 năm, 6 ảnh so sánh; giải thích được vì sao chọn cách lọc mây theo điểm ảnh (SCL).<br>- Số cảnh vùng tập khớp số tham chiếu trong Hướng dẫn (16/4 cho cách lọc % mây, 33/29 cho cách SCL). |
+| 3 | Tuần 3 (~12–15 giờ) | - Đọc Hướng dẫn Mục 4–5 (NDVI, ngưỡng, phát hiện biến động).<br>- Chạy script vùng tập cho cả chuỗi 9 mốc năm (1988→nay); tự viết lại logic biến động cho 1 giai đoạn.<br>- Thử NDVI thô (chưa giới hạn vùng) trên toàn bộ 5 tỉnh ĐBSCL cho năm 2020, so với GMW. | - Chuỗi 8 bản đồ biến động vùng tập, bảng diện tích theo mốc năm và theo giai đoạn.<br>- Giải thích được vì sao NDVI không giới hạn vùng cho diện tích "rừng" gấp nhiều lần GMW trên toàn 5 tỉnh. |
+| 4 | Tuần 4 (~12–15 giờ + 1 ngày dự phòng) | - Đọc Hướng dẫn mục 4.5, 6.3–6.4.<br>- So sánh các ứng viên vùng lọc (ROI) cho toàn vùng theo Kappa và diện tích rừng GMW bị bỏ sót; chọn vùng lọc có bằng chứng.<br>- Đọc 2 tài liệu tham khảo, tóm tắt mỗi bài 5 dòng. | - Báo cáo ngắn 2 trang: vùng lọc đã chọn và vì sao, kết quả, độ chính xác, hạn chế.<br>- **Mốc 1** (họp 60 phút): duyệt báo cáo, demo bản đồ nền toàn vùng. |
+| 5 | Tuần 5 (~12–15 giờ) | - Đọc Hướng dẫn Mục 7 (cách tự thu thập mẫu: thủ công trên bản đồ + ngẫu nhiên phân tầng).<br>- Viết luật gán nhãn 1 trang cho 5 lớp; thiết kế mẫu kết hợp cả 2 cách, rải khắp các tỉnh.<br>- Gán nhãn thử 30 điểm, đối chiếu độc lập với mentor. | - Luật gán nhãn 1 trang; 30 điểm mẫu thử kèm nhận xét khó khăn.<br>- Mức đồng thuận với mentor ≥ 80% số điểm. |
+| 6 | Tuần 6 (~15–20 giờ, gán nhãn nhiều) | - Gán nhãn theo lô nhỏ cho khoảng 800 điểm, cả 2 mốc (2020, nay), đủ mỗi lớp (~150 điểm/lớp) và mỗi tỉnh.<br>- Mentor kiểm tra lại 10% điểm ngẫu nhiên. | - Bộ điểm mẫu hoàn chỉnh (`diem_mau.csv` + Asset GEE), bảng thống kê số điểm theo lớp / năm / tỉnh.<br>- Đồng thuận khi mentor kiểm tra lại ≥ 85%. |
+| 7 | Tuần 7 (~12–15 giờ) | - Chuẩn bị biến đầu vào (band phổ, NDVI, NDMI, độ cao, độ dốc — không dùng band chất lượng/góc chụp); tách mẫu huấn luyện/kiểm tra theo khối 10×10 km.<br>- Huấn luyện Random Forest cho 2020, chỉnh số cây theo sai số out-of-bag; phân loại theo từng tỉnh. | - Bản đồ 5 lớp năm 2020, biểu đồ tầm quan trọng của biến, độ chính xác trên tập kiểm tra.<br>- Chạy lại (nhờ `seed`) ra đúng cùng bản đồ. |
+| 8 | Tuần 8 (~12–15 giờ) | - Áp dụng cùng cấu hình và cùng mẫu cho mốc "nay"; so sánh nhánh A (NDVI + ROI) và nhánh B (Random Forest) trên cùng tập kiểm tra, theo từng tỉnh. | - Bản đồ mốc "nay", bảng so sánh 2 nhánh, ví dụ minh hoạ vùng hai nhánh bất đồng.<br>- **Mốc 2** (họp 60 phút): quyết định tiếp tục toàn bộ phạm vi hay thu hẹp (mục 7 "Rủi ro"). |
+| 9 | Tuần 9 (~12–15 giờ) | - So sánh 2 bản đồ phân loại, tạo ma trận chuyển đổi 5×5; thống kê biến động theo xã và theo tỉnh; kiểm tra độ bền kết quả (đổi seed, bỏ độ cao/độ dốc, đổi vùng lọc...). | - Ma trận chuyển đổi (CSV), bản đồ biến động cuối, danh sách xã điểm nóng, bảng kiểm tra độ bền. |
+| 10 | Tuần 10 (~12–15 giờ) | - Tính đầy đủ độ chính xác trên tập kiểm tra chưa từng dùng (OA, Kappa, Producer's/User's, F1), theo tỉnh; đối chiếu GMW; viết thảo luận nguồn sai số. | - Bảng độ chính xác đầy đủ, một trang thảo luận sai số.<br>- Chỉ rõ tỉnh có độ chính xác thấp nhất và vì sao. |
+| 11 | Tuần 11 (~12–15 giờ) | - Làm bản đồ chuẩn (chú giải, hướng bắc, tỷ lệ, nguồn dữ liệu, ngày tạo); vẽ biểu đồ diện tích/ma trận chuyển đổi/so sánh nhánh; viết bản nháp báo cáo theo khung chuẩn. | - Bản nháp báo cáo đầy đủ kèm hình, bảng; mỗi số liệu truy được về 1 script cụ thể. |
+| 12 | Tuần 12 (~12–15 giờ) | - Sửa báo cáo theo góp ý; kiểm tra người khác chạy lại script ra đúng kết quả; làm slide 12–15 trang và bảo vệ thử 15 phút; đóng gói toàn bộ. | - Gói nộp cuối đầy đủ (8 sản phẩm ở mục 1), slide, nhật ký.<br>- **Mốc 3**: bảo vệ thử và nghiệm thu theo bảng chấm ở mục 6. |
+
+Cách đọc mỗi tuần dưới đây (chi tiết hơn bảng tổng quan trên): **Mục tiêu** (cần đạt), **Việc làm**, **Nộp cuối tuần**, **Đạt khi** (tiêu chí nghiệm thu), **Hỏi kiểm tra hiểu** (2 câu bạn hỏi để biết người thực hiện hiểu hay chỉ chép code).
 
 ---
 
