@@ -258,38 +258,53 @@ def _parse_coords(coords):
     return vals[0], vals[1]
 
 
-def _area_image_url(lat, lon, half_size=0.006):
-    # Static satellite snapshot (~1.3 km wide) from Esri World Imagery, the
-    # same imagery family as the basemap -- no local image file needed.
+def _area_image_url(lat, lon, size=(400, 260), half_size=0.006):
+    # Static satellite snapshot (~1.3 km wide) from Esri World Imagery -- no
+    # local image file needed. Esri renders it on request, so the popup asks
+    # for a small one and the lightbox for a large one.
     bbox = f"{lon - half_size},{lat - half_size * 0.65},{lon + half_size},{lat + half_size * 0.65}"
     return (
         "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export"
-        f"?bbox={bbox}&bboxSR=4326&imageSR=3857&size=400,260&format=jpg&f=image"
+        f"?bbox={bbox}&bboxSR=4326&imageSR=3857&size={size[0]},{size[1]}&format=jpg&f=image"
     )
 
 
+PHOTO_THUMB_DIR = "images/sites/thumbs"   # made by resize_site_photos.py
+
+
 def _photo_sources(label, photos, lat, lon):
-    # None / one path / list of paths -> existing local photos + the
-    # satellite snapshot last. Missing files are reported, not fatal.
+    # None / one path / list of paths -> [(thumbnail, full image), ...] for
+    # the existing local photos, plus the satellite snapshot last. The popup
+    # shows the small thumbnail; the full image only loads in the lightbox.
+    # A photo without a thumbnail in PHOTO_THUMB_DIR falls back to itself.
+    # Missing files are reported, not fatal.
     if isinstance(photos, str):
         photos = [photos]
     missing = [p for p in photos or [] if not os.path.exists(p)]
     if missing:
         print(f"[{label}] photo not found, skipped: {missing}")
-    return [p for p in photos or [] if p not in missing] + [_area_image_url(lat, lon)]
+    pairs = []
+    for p in photos or []:
+        if p in missing:
+            continue
+        thumb = os.path.join(PHOTO_THUMB_DIR, os.path.basename(p)).replace("\\", "/")
+        pairs.append((thumb if os.path.exists(thumb) else p, p))
+    pairs.append((_area_image_url(lat, lon, size=(168, 124)),
+                  _area_image_url(lat, lon, size=(1000, 650))))
+    return pairs
 
 
 def _gallery_html(sources, site_name):
     # Small thumbnails; clicking one opens the lightbox (fsOpen, defined by
-    # _SiteLightbox below) on that image, browsable with the site's others.
+    # _SiteLightbox below) on its full image, browsable with the site's others.
     # Folium popups are regular DOM, not iframes, so inline onclick works.
     html = '<div class="fs-gallery">'
-    for k, src in enumerate(sources):
+    for k, (thumb, full) in enumerate(sources):
         is_sat = k == len(sources) - 1
         caption = f"{site_name} – satellite view (Esri)" if is_sat else site_name
         html += (
-            f'<img class="fs-thumb" src="{src}" data-caption="{caption}"'
-            ' onclick="fsOpen(this)" loading="lazy">'
+            f'<img class="fs-thumb" src="{thumb}" data-full="{full}" data-caption="{caption}"'
+            ' onclick="fsOpen(this)">'
         )
     return html + "</div>"
 
@@ -335,7 +350,7 @@ class _SiteLightbox(MacroElement):
       var fsList = [], fsIdx = 0;
       function fsShow() {
         var t = fsList[fsIdx];
-        document.getElementById('fs-img').src = t.src;
+        document.getElementById('fs-img').src = t.dataset.full || t.src;
         document.getElementById('fs-caption').textContent =
           t.dataset.caption + '  (' + (fsIdx + 1) + ' / ' + fsList.length + ')';
         var multi = fsList.length > 1 ? '' : 'none';
