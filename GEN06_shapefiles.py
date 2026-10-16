@@ -11,7 +11,6 @@ import GEN04_mangrove_layers as ML
 
 
 import geopandas as gpd                # Spatial data handling (GeoDataFrames)
-import glob                            # File pattern matching (e.g., list all .tif files in a folder)
 
 # ---- Add commune boundaries shapefile ----
 commune_path = "shapefile_commune/VungNghiencuu.shp"  # path to your shapefile
@@ -172,55 +171,282 @@ for _, row in gdf_breakwaters.iterrows():
 # In[13]:
 
 
-# -------------- Add more human activities ----------------------------
+# Other human activities (resort, reforestation, aquaculture, wind park, urban
+# area) are built further down, in "Other human activities", because they
+# share the icon/photo-gallery helpers defined with the field sites.
+
+
+# ### Field sites
+# Pinned survey points. To add/move a site, edit FIELD_SITES below (coordinates
+# are pasted as degrees-minutes-seconds, exactly as Google Maps shows them).
+# The popup shows the site name, a picture of the area and the nearest
+# breakwater/revetment from Interventions.shp with its construction year --
+# looked up automatically, so it stays correct when the shapefile is updated.
+
+# In[14]:
+
+
+import os
+import re
+from branca.element import MacroElement
+from jinja2 import Template
+from shapely.geometry import Point
+
+# (name, coordinates -- DMS '9°48\'04.3"N 106°37\'43.9"E' or decimal
+#  '9.80119, 106.62886', both as copied from Google Maps, kind -- key of
+#  SITE_ICONS, photos -- None, one path or a list of paths (the satellite
+#  snapshot is always added last), show nearest structure -- False for sites
+#  with no intervention nearby)
+FIELD_SITES = [
+    ("Biển Tân Điền, Đồng Tháp",        '10°21\'30.5"N 106°46\'58.4"E', "site",
+     ["images/sites/Tan_Dien_1.JPG", "images/sites/Tan_Dien_2.JPG", "images/sites/Tan_Dien_3.JPG"], True),
+    ("Biển Cồn Lớn, Vĩnh Long",         '9°48\'04.3"N 106°37\'43.9"E',  "site",
+     ["images/sites/Con_Lon_1.JPG", "images/sites/Con_Lon_2.JPG"], True),
+    ("Duyên Hải, Vĩnh Long",            '9°33\'46.0"N 106°30\'18.3"E',  "site",
+     ["images/sites/DuyenHai_1.JPG"], True),
+    ("Trạm Thủy Văn Đại Ngãi, Cần Thơ", '9°44\'04.6"N 106°04\'27.1"E',  "station", 
+     ["images/sites/Dai_Ngai_1.JPG", "images/sites/Dai_Ngai_2.JPG"], False),
+    ("Vĩnh Hải, Cần Thơ",               '9°21\'13.2"N 106°09\'41.3"E',  "site",   
+     ["images/sites/Vinh_Hai_1.JPG"], True),
+    ("Bến Tàu Vĩnh Châu, Cần Thơ",      '9.293710892642208, 105.97646527660068', "site",
+     ["images/sites/VinhChau_1.JPG", "images/sites/VinhChau_2.JPG"], True),
+    ("Xã Lai Hòa, Cần Thơ",             '9.252733829491397, 105.84545999974812', "site",
+     ["images/sites/Lai_Hoa_1.JPG", "images/sites/Lai_Hoa_2.JPG"], True),
+    ("Resort Nhà Mát, Cà Mau",          '9.202301533249663, 105.74505836416586', "site",
+      ["images/sites/Nha_Mat_1.JPG", "images/sites/Nha_Mat_2.jpeg"], True),
+]
+
+# Round badge per kind: (Font Awesome 6 glyph, background color), used by both
+# FIELD_SITES and OTHER_ACTIVITIES. Glyphs: https://fontawesome.com/v6/search?ic=free
+SITE_ICONS = {
+    "site":          ("fa-flag",     "#c62828"),   # field survey site
+    "station":       ("fa-droplet",  "#0277bd"),   # hydrological station
+    "resort":        ("fa-hotel",    "#1f3f77"),
+    "reforestation": ("fa-seedling", "#2e7d32"),
+    "aquaculture":   ("fa-fish",     "#3a9ad9"),
+    "wind":          ("fa-bolt",     "#6d6d6d"),
+    "urban":         ("fa-house",    "#8e2a2a"),
+}
+
+
+def _site_icon(kind):
+    glyph, bg = SITE_ICONS[kind]
+    return folium.DivIcon(
+        html=(
+            f'<div style="width:28px; height:28px; border-radius:50%; background:{bg};'
+            ' border:2px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.5);'
+            ' display:flex; align-items:center; justify-content:center;">'
+            f'<i class="fa-solid {glyph}" style="color:#fff; font-size:13px;"></i></div>'
+        ),
+        icon_size=(28, 28),
+        icon_anchor=(14, 14),
+        class_name="field-site-icon",  # replaces Leaflet's default white box
+    )
+
+
+def _parse_coords(coords):
+    """'10°21'30.5"N 106°46'58.4"E' or '10.358472, 106.782889'
+    -> (10.358472, 106.782889)"""
+    parts = re.findall(r"""(\d+)°(\d+)'([\d.]+)"([NSEW])""", coords)
+    if not parts:
+        lat, lon = (float(v) for v in coords.split(","))
+        return lat, lon
+    vals = []
+    for d, m, s, hemi in parts:
+        v = int(d) + int(m) / 60 + float(s) / 3600
+        vals.append(-v if hemi in "SW" else v)
+    return vals[0], vals[1]
+
+
+def _area_image_url(lat, lon, half_size=0.006):
+    # Static satellite snapshot (~1.3 km wide) from Esri World Imagery, the
+    # same imagery family as the basemap -- no local image file needed.
+    bbox = f"{lon - half_size},{lat - half_size * 0.65},{lon + half_size},{lat + half_size * 0.65}"
+    return (
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export"
+        f"?bbox={bbox}&bboxSR=4326&imageSR=3857&size=400,260&format=jpg&f=image"
+    )
+
+
+def _photo_sources(label, photos, lat, lon):
+    # None / one path / list of paths -> existing local photos + the
+    # satellite snapshot last. Missing files are reported, not fatal.
+    if isinstance(photos, str):
+        photos = [photos]
+    missing = [p for p in photos or [] if not os.path.exists(p)]
+    if missing:
+        print(f"[{label}] photo not found, skipped: {missing}")
+    return [p for p in photos or [] if p not in missing] + [_area_image_url(lat, lon)]
+
+
+def _gallery_html(sources, site_name):
+    # Small thumbnails; clicking one opens the lightbox (fsOpen, defined by
+    # _SiteLightbox below) on that image, browsable with the site's others.
+    # Folium popups are regular DOM, not iframes, so inline onclick works.
+    html = '<div class="fs-gallery">'
+    for k, src in enumerate(sources):
+        is_sat = k == len(sources) - 1
+        caption = f"{site_name} – satellite view (Esri)" if is_sat else site_name
+        html += (
+            f'<img class="fs-thumb" src="{src}" data-caption="{caption}"'
+            ' onclick="fsOpen(this)" loading="lazy">'
+        )
+    return html + "</div>"
+
+
+class _SiteLightbox(MacroElement):
+    # Page-level modal + CSS/JS for the field-site photo galleries. Added as a
+    # child of sites_group, so every map that adds the group gets it -- no
+    # change needed in the MAP notebooks.
+    _template = Template("""
+    {% macro header(this, kwargs) %}
+    <style>
+      .fs-gallery { display:grid; grid-template-columns:repeat(3, 84px); gap:4px; }
+      .fs-thumb { width:84px; height:62px; object-fit:cover; border-radius:4px;
+                  cursor:zoom-in; border:1px solid #ccc; transition:transform .15s, box-shadow .15s; }
+      .fs-thumb:hover { transform:scale(1.05); box-shadow:0 2px 8px rgba(0,0,0,.35); }
+      #fs-modal { position:fixed; inset:0; z-index:10000; display:flex; align-items:center;
+                  justify-content:center; flex-direction:column; background:rgba(0,0,0,.85);
+                  opacity:0; visibility:hidden; transition:opacity .25s, visibility .25s; }
+      #fs-modal.open { opacity:1; visibility:visible; }
+      #fs-modal img { max-width:90vw; max-height:80vh; border-radius:6px;
+                      box-shadow:0 8px 30px rgba(0,0,0,.6); transform:scale(.92);
+                      transition:transform .25s; }
+      #fs-modal.open img { transform:scale(1); }
+      #fs-caption { color:#eee; margin-top:10px; font:14px sans-serif; }
+      .fs-btn { position:absolute; color:#fff; font:36px sans-serif; cursor:pointer;
+                user-select:none; padding:10px 18px; opacity:.8; }
+      .fs-btn:hover { opacity:1; }
+      #fs-close { top:10px; right:14px; }
+      #fs-prev { left:10px; top:50%; transform:translateY(-50%); }
+      #fs-next { right:10px; top:50%; transform:translateY(-50%); }
+    </style>
+    {% endmacro %}
+
+    {% macro html(this, kwargs) %}
+    <div id="fs-modal" onclick="if (event.target === this) fsClose()">
+      <span id="fs-close" class="fs-btn" onclick="fsClose()">&times;</span>
+      <span id="fs-prev" class="fs-btn" onclick="fsStep(-1)">&#8249;</span>
+      <img id="fs-img" src="">
+      <span id="fs-next" class="fs-btn" onclick="fsStep(1)">&#8250;</span>
+      <div id="fs-caption"></div>
+    </div>
+    <script>
+      var fsList = [], fsIdx = 0;
+      function fsShow() {
+        var t = fsList[fsIdx];
+        document.getElementById('fs-img').src = t.src;
+        document.getElementById('fs-caption').textContent =
+          t.dataset.caption + '  (' + (fsIdx + 1) + ' / ' + fsList.length + ')';
+        var multi = fsList.length > 1 ? '' : 'none';
+        document.getElementById('fs-prev').style.display = multi;
+        document.getElementById('fs-next').style.display = multi;
+      }
+      function fsOpen(thumb) {
+        fsList = Array.from(thumb.parentNode.querySelectorAll('.fs-thumb'));
+        fsIdx = fsList.indexOf(thumb);
+        fsShow();
+        document.getElementById('fs-modal').classList.add('open');
+      }
+      function fsStep(d) { fsIdx = (fsIdx + d + fsList.length) % fsList.length; fsShow(); }
+      function fsClose() { document.getElementById('fs-modal').classList.remove('open'); }
+      document.addEventListener('keydown', function (e) {
+        if (!document.getElementById('fs-modal').classList.contains('open')) return;
+        if (e.key === 'Escape') fsClose();
+        if (e.key === 'ArrowLeft') fsStep(-1);
+        if (e.key === 'ArrowRight') fsStep(1);
+      });
+    </script>
+    {% endmacro %}
+    """)
+
+
+# Interventions in metres (UTM 48N) for the nearest-structure lookup
+_breakwaters_utm = gdf_breakwaters.to_crs(epsg=32648)
+
+sites_group = folium.FeatureGroup(name="Field sites", show=True)
+sites_group.add_child(_SiteLightbox())
+
+for i, (name, coords, kind, photos, show_nearest) in enumerate(FIELD_SITES, start=1):
+    lat, lon = _parse_coords(coords)
+    is_dms = "°" in coords
+    sources = _photo_sources(f"Field sites: Site {i}", photos, lat, lon)
+
+    popup_html = (
+        f"<b>Site {i}: {name}</b><br>"
+        f'<span style="color:#888; font-size:11px;">{coords + " " if is_dms else ""}({lat:.5f}, {lon:.5f})</span><br><br>'
+        f"{_gallery_html(sources, name)}<br>"
+    )
+
+    if show_nearest:
+        site_utm = gpd.GeoSeries([Point(lon, lat)], crs=4326).to_crs(epsg=32648).iloc[0]
+        dists = _breakwaters_utm.distance(site_utm)
+        nearest = gdf_breakwaters.loc[dists.idxmin()]
+        dist_m = dists.min()
+        dist_txt = f"{dist_m:.0f} m" if dist_m < 1000 else f"{dist_m / 1000:.1f} km"
+        year = "unknown" if pd.isna(nearest["Year"]) else int(nearest["Year"])
+        popup_html += (
+            f"<b>Nearest structure:</b> {nearest['Name_EN']}<br>"
+            f"Type: {nearest['Type_EN']}<br>"
+            f"Year built: {year}<br>"
+            f"Distance: {dist_txt}<br><br>"
+            f'<span style="color:#888; font-size:11px;">{nearest["Name"]}</span>'
+        )
+    else:
+        popup_html += "No coastal structures nearby."
+
+    folium.Marker(
+        location=[lat, lon],
+        popup=folium.Popup(popup_html, max_width=300),
+        tooltip=f"Site {i}: {name}",
+        icon=_site_icon(kind),
+    ).add_to(sites_group)
+
+
+# ### Other human activities
+# Same idea as FIELD_SITES: one line per point, edit freely. Coordinates were
+# taken from the old shapefile_other/Shapefile11-15.shp points (which are no
+# longer read). The popup shows the name, the description (HTML allowed) and
+# the photo gallery; the lightbox comes with sites_group, so the MAP notebooks
+# must keep adding sites_group too (they do).
+
+# In[15]:
+
+
+# (name, coordinates, kind -- key of SITE_ICONS, photos -- like FIELD_SITES,
+#  description -- HTML shown under the name, "" for none)
+OTHER_ACTIVITIES = [
+    ("Nhà Mát resort",                  "9.205039, 105.745670", "resort", None,
+     "Construction year: 2015"),
+    ("Mangrove reforestation projects", "9.202535, 105.743950", "reforestation", None,
+     "2000-2010: 150-200 hectares<br>"
+     "2015-2020: 201 hectares<br>"
+     "2019: more than 2000 mangrove trees<br><br>"
+     '<a href="https://www.livinglabmekongdelta.com/mangrovereforestation" target="_blank">'
+     "For more information about mangrove restoration, click here</a>"),
+    ("Aquaculture",                     "9.205616, 105.714229", "aquaculture", None, ""),
+    ("Wind park",                       "9.22977257587137, 105.85703141310928", "wind",
+     ["images/sites/Dien_Gio_1.jpeg", "images/sites/Dien_Gio_2.jpeg"], ""),
+    ("Urban area",                      "9.212384, 105.741053", "urban", None, ""),
+]
+
 Extra_group = folium.FeatureGroup(name="Other human activities", show=True)
 
-# Loop through shapefiles in the folder 
-shapefiles_extra = sorted(glob.glob("shapefile_other/*.shp"))
+for name, coords, kind, photos, description in OTHER_ACTIVITIES:
+    lat, lon = _parse_coords(coords)
+    sources = _photo_sources(f"Other activities: {name}", photos, lat, lon)
 
-# Define popup text for each shapefile (order matches file order)
-popup_texts_extra = [   
-    '<b>Nhà Mát resort</b>'
-    '<br>Construction year: 2015<br>', 
+    popup_html = f"<b>{name}</b><br>"
+    if description:
+        popup_html += f"{description}<br>"
+    popup_html += f"<br>{_gallery_html(sources, name)}"
 
-    '<b>Mangrove reforestation projects</b>'
-    '<br>2000-2010: 150-200 hectares'
-    '<br>2015-2020: 201 hectares'
-    '<br>2019: more than 2000 mangrove trees<br><br>'
-    '<a href="https://www.livinglabmekongdelta.com/mangrovereforestation" target="_blank">For more information about mangrove restoration, click here</a>', 
-
-    '<b>Aquaculture</b>', 
-
-    '<b>Wind park</b>', 
-
-    '<b>Urban area</b>'   
-]
-
-# Define matching icons (Font Awesome 4.7 icons supported by Folium)
-icons_extra = [
-    ("hotel", "darkblue"),   # For resort
-    ("seedling", "green"),    # For mangrove reforestation
-    ("fish", "lightblue"),    # For aquaculture
-    ("bolt", "lightgray"),    # For windmill farm
-    ("house", "darkred")     # For urban area
-]
-
-for shp, popup_html, (icon_name, icon_color) in zip(shapefiles_extra, popup_texts_extra, icons_extra):
-    gdf = gpd.read_file(shp)
-
-    # Extract the single point geometry
-    point = gdf.geometry.iloc[0]
-
-    if point.geom_type == "Point":
-        lon, lat = point.x, point.y
-
-        # Add marker with popup and appropriate icon
-        folium.Marker(
-            location=[lat, lon],
-            popup=folium.Popup(popup_html, max_width=250),
-            icon=folium.Icon(icon=icon_name, prefix="fa", color=icon_color)
-        ).add_to(Extra_group)
-
+    folium.Marker(
+        location=[lat, lon],
+        popup=folium.Popup(popup_html, max_width=300),
+        tooltip=name,
+        icon=_site_icon(kind),
+    ).add_to(Extra_group)
 
 
 # In[ ]:
