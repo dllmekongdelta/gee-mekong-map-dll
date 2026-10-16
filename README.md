@@ -132,6 +132,3 @@ new ramp — if it's ever borderline, widen `l_floor`/`l_ceil` or lower
 ## Tech Stack
 
 Google Earth Engine • Geemap • Folium • Leaflet • Bootstrap 5
-
-.venv\Scripts\Activate.ps1
-python resize_site_photos.py
