@@ -108,6 +108,25 @@ def set_page_meta(m, title, favicon="images/logo/icon.png"):
     )
 
 
+# ### Basemap
+# Google Hybrid = satellite imagery + road and place-name labels. Added
+# directly as a tile layer: geemap's add_basemap('HYBRID') is actually Esri
+# World Imagery without labels, not Google.
+
+# In[2c]:
+
+
+def add_google_hybrid(m):
+    folium.TileLayer(
+        tiles="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}",
+        attr="Google",
+        name="Google Hybrid",
+        max_zoom=22,
+        overlay=False,
+        control=True,
+    ).add_to(m)
+
+
 # ### Scalebar
 
 # In[3]:

@@ -17,6 +17,10 @@ MAP01_Mangrove_LOSS.py
 MAP02_Mangrove_GAIN.py
 MAP03_Mangrove_COVERAGE.py
 
+# Full-resolution field photos; the web-sized copies in images/sites/ are
+# what the maps reference and what gets committed
+images/sites/original/
+
 # OS / editor
 .DS_Store
 Thumbs.db
