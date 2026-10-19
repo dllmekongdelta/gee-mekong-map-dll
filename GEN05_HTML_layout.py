@@ -117,6 +117,15 @@ def set_page_meta(m, title, favicon="images/logo/icon.png"):
 
 
 def add_google_hybrid(m):
+    # Drop any base layer the Map already has, so Google Hybrid is the only
+    # (and therefore default) basemap. Needed because the geemap version CI
+    # installs (0.20, requirements.txt) always adds OpenStreetMap and ignores
+    # basemap=None; newer geemap honours it. Overlays (GEE layers, shapefiles)
+    # are kept -- and are normally added after this call anyway.
+    for key, child in list(m._children.items()):
+        if isinstance(child, folium.TileLayer) and not child.overlay:
+            del m._children[key]
+
     folium.TileLayer(
         tiles="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}",
         attr="Google",
