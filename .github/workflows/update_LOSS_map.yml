@@ -2,7 +2,7 @@ name: Update LOSS map
 
 on:
   schedule:
-    - cron: "0 17 */3 * *"    # 01:00 VN, every 3 days
+    - cron: "0 17 * * *"    # 00:00 VN, daily -- GEE tile URLs in the HTML expire in <3 days
   workflow_dispatch:       # allow manual run from GitHub
   workflow_call:           # so it can be used in other workflows
 
@@ -64,12 +64,18 @@ jobs:
         run: |
           git config user.name "Map Bot"
           git config user.email "bot@example.com"
-          git fetch origin main
-          git rebase origin/main || echo "No rebase needed"
-
           git add Mangrove_LOSS_map.html
           git commit -m "Automated map update" || echo "No changes to commit"
-          git push origin main
+
+          # Commit first, then rebase onto whatever landed on main while the
+          # notebook ran (e.g. another map workflow) -- each workflow only
+          # touches its own HTML file, so the rebase always applies cleanly.
+          # Retry in case another workflow pushes in between.
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase origin main && git push origin main && exit 0
+            echo "Push attempt $attempt failed, retrying..."; sleep 15
+          done
+          exit 1
 
       # Warm up GitHub Pages CDN so first load is instant
       - name: Warm up GitHub Pages cache
