@@ -136,6 +136,20 @@ def add_google_hybrid(m):
     ).add_to(m)
 
 
+# Google Roads = road map without satellite imagery. Optional second base layer,
+# off at start; call after add_google_hybrid, which removes existing base layers.
+def add_google_roads(m):
+    folium.TileLayer(
+        tiles="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}",
+        attr="Google",
+        name="Google Roads",
+        max_zoom=22,
+        overlay=False,
+        control=True,
+        show=False,
+    ).add_to(m)
+
+
 # ### Scalebar
 
 # In[3]:
@@ -177,6 +191,111 @@ class ScaleBar(MacroElement):
         </style>
         """
         self.get_root().html.add_child(Element(css))
+
+
+# ### Play control (time slider)
+# Shows ONE year layer at a time and steps through them (play / pause, prev /
+# next, slider, speed). Needed because with every year layer switched on, the
+# layers stack and the map shows the union of all years, not any single year.
+# Rendered as a MacroElement child of the map so its script runs after the
+# tile layers it references (children render in the order they were added).
+
+# In[3b]:
+
+
+import json
+
+
+class PlayControl(MacroElement):
+    _template = Template(u"""
+        {% macro html(this, kwargs) %}
+        <div id="{{ this.get_name() }}" style="position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
+             z-index: 9999; background: rgba(255,255,255,0.85); border-radius: 8px; padding: 3px 10px 5px;
+             box-shadow: 0 0 4px rgba(0,0,0,0.3); text-align: center; color: #111; white-space: nowrap;
+             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+            <div style="font-size: 13px; font-weight: 600; line-height: 1.2;">{{ this.title }}
+                <span class="pc-year" style="font-size: 20px; font-weight: 800; margin-left: 2px;"></span></div>
+            <div style="display: flex; align-items: center; gap: 4px; justify-content: center; margin-top: 2px;">
+                <button class="pc-prev" title="Previous year" style="font-size: 11px; padding: 1px 5px; cursor: pointer;">&#9198;</button>
+                <button class="pc-play" title="Play / pause" style="font-size: 11px; padding: 1px 5px; cursor: pointer; min-width: 30px;">&#9654;</button>
+                <button class="pc-next" title="Next year" style="font-size: 11px; padding: 1px 5px; cursor: pointer;">&#9197;</button>
+                <input class="pc-slider" type="range" min="0" max="{{ this.layer_vars|length - 1 }}" step="1"
+                       style="width: 140px; height: 14px; margin: 0 2px; cursor: pointer;">
+                <select class="pc-speed" title="Seconds per year" style="font-size: 11px; padding: 0;">
+                    <option value="800">0.8 s</option><option value="1500" selected>1.5 s</option>
+                    <option value="2500">2.5 s</option>
+                </select>
+            </div>
+        </div>
+        {% endmacro %}
+        {% macro script(this, kwargs) %}
+        (function () {
+            var map = {{ this._parent.get_name() }};
+            var layers = [{% for n in this.layer_vars %}{{ n }}, {% endfor %}];
+            var labels = {{ this.labels_json }};
+            var box = document.getElementById('{{ this.get_name() }}');
+            var yearEl = box.querySelector('.pc-year'), slider = box.querySelector('.pc-slider');
+            var playBtn = box.querySelector('.pc-play'), speed = box.querySelector('.pc-speed');
+            L.DomEvent.disableClickPropagation(box);
+            L.DomEvent.disableScrollPropagation(box);
+            var i = {{ this.start }}, timer = null;
+            // Every year layer stays on the map (tiles preloaded, hidden at
+            // opacity 0) and years crossfade, instead of remove/add, which
+            // reloads tiles and makes the map blink between years.
+            var base = layers.map(function (l) { return l.options.opacity == null ? 1 : l.options.opacity; });
+            function setOp(l, op, dur, delay) {
+                var c = l.getContainer && l.getContainer();
+                if (c) { c.style.transition = dur ? 'opacity ' + dur + 'ms ease-in-out ' + (delay || 0) + 'ms' : 'none'; }
+                l.setOpacity(op);
+            }
+            function show(j, dur) {
+                var prev = i;
+                i = (j + layers.length) % layers.length;
+                layers.forEach(function (l) { if (!map.hasLayer(l)) { map.addLayer(l); } });
+                dur = dur || 0;
+                layers.forEach(function (l, k) {
+                    if (k === i) { setOp(l, base[k], dur, 0); }
+                    // old year fades out half a step later: areas present in both years stay solid
+                    else if (k === prev && dur) { setOp(l, 0, dur, dur / 2); }
+                    else { setOp(l, 0, 0, 0); }
+                });
+                yearEl.textContent = labels[i];
+                slider.value = i;
+            }
+            function fade() { return Math.min(900, parseInt(speed.value, 10) * 0.6); }
+            function stop() { if (timer) { clearInterval(timer); timer = null; } playBtn.innerHTML = '&#9654;'; }
+            function play() {
+                stop();
+                playBtn.innerHTML = '&#10074;&#10074;';
+                timer = setInterval(function () { show(i + 1, fade()); }, parseInt(speed.value, 10));
+            }
+            playBtn.onclick = function () { if (timer) { stop(); } else { play(); } };
+            box.querySelector('.pc-prev').onclick = function () { stop(); show(i - 1, 400); };
+            box.querySelector('.pc-next').onclick = function () { stop(); show(i + 1, 400); };
+            slider.oninput = function () { stop(); show(parseInt(slider.value, 10), 250); };
+            speed.onchange = function () { if (timer) { play(); } };
+            show(i);
+        })();
+        {% endmacro %}
+    """)
+
+    def __init__(self, layers, labels, title="Mangrove coverage", start=None):
+        super().__init__()
+        self._name = "PlayControl"
+        self.layer_vars = [layer.get_name() for layer in layers]
+        self.labels_json = json.dumps([str(x) for x in labels])
+        self.title = title
+        self.start = len(layers) - 1 if start is None else start
+
+
+def add_play_control(m, layer_names, labels, title="Mangrove coverage"):
+    # layer_names: the names given to Map.addLayer, in time order. Looks the
+    # folium tile layers up by name so callers keep using geemap's addLayer.
+    by_name = {getattr(c, "layer_name", None): c for c in m._children.values()}
+    missing = [n for n in layer_names if n not in by_name]
+    if missing:
+        raise ValueError(f"add_play_control: layers not found on map: {missing}")
+    m.add_child(PlayControl([by_name[n] for n in layer_names], labels, title=title))
 
 
 # ### North Arrow
